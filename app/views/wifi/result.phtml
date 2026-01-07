@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $pageTitle ?? 'Password WiFi Anda' ?></title>
+    <style>
+        /**
+         * ============================================
+         * STEP 6: VIEW / UI - Hasil Password
+         * Tampilan hasil generate password
+         * ============================================
+         */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header .icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Success badge */
+        .success-badge {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        /* Info card */
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-item .label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-item .value {
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Password box - HIGHLIGHT */
+        .password-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .password-box .label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .password-box .password {
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .password-box .copy-hint {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            margin-top: 15px;
+        }
+
+        /* Copy button */
+        .copy-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: transform 0.2s;
+        }
+
+        .copy-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Warning box */
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .warning-box p {
+            color: #856404;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #333;
+            border: 2px solid #e1e1e1;
+        }
+
+        /* Print style */
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+            .btn-group {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">✅</div>
+            <h1>Password WiFi Berhasil Dibuat!</h1>
+            <p>Simpan password ini dengan baik</p>
+        </div>
+
+        <!-- Success Badge -->
+        <div class="success-badge">
+            🎉 Password untuk <strong><?= htmlspecialchars($wifiPassword->user_name) ?></strong> telah dibuat
+        </div>
+
+        <!-- Password Box -->
+        <div class="password-box">
+            <div class="label">PASSWORD WIFI ANDA</div>
+            <div class="password" id="password"><?= htmlspecialchars($wifiPassword->password) ?></div>
+            <button class="copy-btn" onclick="copyPassword()">
+                📋 Salin Password
+            </button>
+            <div class="copy-hint">Klik tombol di atas untuk menyalin</div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="info-card">
+            <div class="info-item">
+                <span class="label">👤 Nama User</span>
+                <span class="value"><?= htmlspecialchars($wifiPassword->user_name) ?></span>
+            </div>
+            <div class="info-item">
+                <span class="label">📅 Dibuat Pada</span>
+                <span class="value"><?= $formattedCreated ?></span>
+            </div>
+            <div class="info-item">
+                <span class="label">⏰ Berlaku Sampai</span>
+                <span class="value"><?= $formattedExpired ?></span>
+            </div>
+            <div class="info-item">
+                <span class="label">📊 Status</span>
+                <span class="value" style="color: #28a745;">● Aktif</span>
+            </div>
+        </div>
+
+        <!-- Warning -->
+        <div class="warning-box">
+            <p>⚠️ <strong>Penting:</strong> Password ini akan kedaluwarsa pada tanggal yang tertera. Setelah itu, Anda perlu generate password baru.</p>
+        </div>
+
+        <!-- Button Group -->
+        <div class="btn-group">
+            <a href="/wifi" class="btn btn-primary">
+                🔄 Buat Password Baru
+            </a>
+            <button class="btn btn-secondary" onclick="window.print()">
+                🖨️ Cetak
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Fungsi untuk menyalin password ke clipboard
+         */
+        function copyPassword() {
+            const password = document.getElementById('password').textContent;
+            
+            // Gunakan Clipboard API modern
+            navigator.clipboard.writeText(password).then(function() {
+                alert('Password berhasil disalin: ' + password);
+            }).catch(function(err) {
+                // Fallback untuk browser lama
+                const textArea = document.createElement('textarea');
+                textArea.value = password;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Password berhasil disalin: ' + password);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $pageTitle ?? 'Riwayat Password' ?></title>
+    <style>
+        /**
+         * ============================================
+         * STEP 6: VIEW / UI - History (Bonus)
+         * Halaman riwayat password
+         * ============================================
+         */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header .icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Table styling */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        td {
+            color: #555;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Password cell */
+        .password-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #667eea;
+            letter-spacing: 1px;
+        }
+
+        /* Status badge */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-expired {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state .icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        /* Button */
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">📋</div>
+            <h1>Riwayat Password WiFi</h1>
+            <p>Daftar password yang pernah digenerate</p>
+        </div>
+
+        <!-- Table -->
+        <?php if (count($passwords) > 0): ?>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama User</th>
+                            <th>Password</th>
+                            <th>Dibuat</th>
+                            <th>Expired</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $no = 1; ?>
+                        <?php foreach ($passwords as $pwd): ?>
+                            <?php 
+                                $isExpired = strtotime($pwd->expired_at) < time();
+                                $statusClass = $isExpired ? 'status-expired' : 'status-active';
+                                $statusText = $isExpired ? 'Expired' : 'Aktif';
+                            ?>
+                            <tr>
+                                <td><?= $no++ ?></td>
+                                <td><?= htmlspecialchars($pwd->user_name) ?></td>
+                                <td class="password-cell"><?= htmlspecialchars($pwd->password) ?></td>
+                                <td><?= date('d M Y, H:i', strtotime($pwd->created_at)) ?></td>
+                                <td><?= date('d M Y, H:i', strtotime($pwd->expired_at)) ?></td>
+                                <td>
+                                    <span class="status-badge <?= $statusClass ?>">
+                                        <?= $statusText ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="icon">📭</div>
+                <h3>Belum Ada Password</h3>
+                <p>Belum ada password yang pernah digenerate.</p>
+            </div>
+        <?php endif; ?>
+
+        <!-- Button -->
+        <div class="btn-container">
+            <a href="/wifi" class="btn">
+                ➕ Generate Password Baru
+            </a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $pageTitle ?? 'WiFi Password Generator' ?></title>
+    <style>
+        /**
+         * ============================================
+         * STEP 6: VIEW / UI - Form Input
+         * CSS Styling sederhana dan bersih
+         * ============================================
+         */
+        
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Container utama */
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header .icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Form styling */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .form-group small {
+            color: #888;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* Button */
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Error message */
+        .error-message {
+            background: #ffe6e6;
+            color: #cc0000;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #cc0000;
+            font-size: 14px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">📶</div>
+            <h1>Generate Password WiFi</h1>
+            <p>Masukkan nama Anda untuk mendapatkan password WiFi</p>
+        </div>
+
+        <!-- Error Message (jika ada) -->
+        <?php if (isset($error)): ?>
+            <div class="error-message">
+                ⚠️ <?= $error ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Form Input -->
+        <form action="/wifi/generate" method="POST">
+            <div class="form-group">
+                <label for="user_name">Nama Lengkap</label>
+                <input 
+                    type="text" 
+                    id="user_name" 
+                    name="user_name" 
+                    placeholder="Contoh: John Doe"
+                    required
+                    minlength="3"
+                    maxlength="100"
+                    autocomplete="off"
+                >
+                <small>Minimal 3 karakter, hanya huruf, angka, dan spasi</small>
+            </div>
+
+            <div class="form-group">
+                <label for="days">Masa Berlaku Password</label>
+                <select id="days" name="days">
+                    <option value="1">1 Hari</option>
+                    <option value="3">3 Hari</option>
+                    <option value="7" selected>7 Hari (Rekomendasi)</option>
+                    <option value="14">14 Hari</option>
+                    <option value="30">30 Hari</option>
+                </select>
+                <small>Setelah masa berlaku habis, password tidak bisa digunakan</small>
+            </div>
+
+            <button type="submit" class="btn">
+                🔐 Generate Password
+            </button>
+        </form>
+
+        <!-- Footer -->
+        <div class="footer">
+            <a href="/wifi/history">📋 Lihat Riwayat Password</a>
+        </div>
+    </div>
+</body>
+</html>
