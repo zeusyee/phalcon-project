@@ -173,5 +173,3 @@ public/              # Entry point & assets (css, js, img)
 - [Docker Docs](https://docs.docker.com/)
 
 ---
-
-**Dibuat dengan ❤️ menggunakan Phalcon PHP Framework**
