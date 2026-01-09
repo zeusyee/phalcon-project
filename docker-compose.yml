@@ -50,7 +50,7 @@ services:
     container_name: phalcon_phpmyadmin
     restart: unless-stopped
     ports:
-      - "8081:80"
+      - "8182:80"
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
