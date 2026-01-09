@@ -40,8 +40,10 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - phalcon_network
-    ports:
-      - "3306:3306"
+    # Port MySQL tidak perlu di-expose keluar (hanya akses internal)
+    # Jika perlu akses dari luar, uncomment dan ganti port jika 3306 sudah dipakai
+    # ports:
+    #   - "3307:3306"
 
   phpmyadmin:
     image: phpmyadmin:latest
