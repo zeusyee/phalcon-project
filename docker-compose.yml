@@ -18,7 +18,7 @@ services:
     container_name: phalcon_nginx
     restart: unless-stopped
     ports:
-      - "${NGINX_PORT:-8080}:80"
+      - "${NGINX_PORT:-8181}:81"
     volumes:
       - ./:/var/www/html
       - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
