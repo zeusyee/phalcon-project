@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: phalcon_app
+    container_name: zf_app
     restart: unless-stopped
     working_dir: /var/www/html
     environment:
@@ -24,7 +24,7 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: phalcon_nginx
+    container_name: zf_nginx
     restart: unless-stopped
     ports:
       - "${NGINX_PORT:-8181}:81"
@@ -38,7 +38,7 @@ services:
 
   mysql:
     image: mysql:8.0
-    container_name: phalcon_mysql
+    container_name: zf_mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -56,10 +56,10 @@ services:
 
   phpmyadmin:
     image: phpmyadmin:latest
-    container_name: phalcon_phpmyadmin
+    container_name: zf_phpmyadmin
     restart: unless-stopped
     ports:
-      - "8182:80"
+      - "8185:80"
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
@@ -73,7 +73,7 @@ services:
   # Odoo ERP System
   postgres_odoo:
     image: postgres:15
-    container_name: phalcon_odoo_postgres
+    container_name: zf_odoo_postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: postgres
@@ -90,7 +90,7 @@ services:
 
   odoo:
     image: odoo:17.0
-    container_name: phalcon_odoo
+    container_name: zf_odoo
     restart: unless-stopped
     ports:
       - "${ODOO_PORT:-8069}:8069"
