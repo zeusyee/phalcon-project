@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odoo - Inventory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .header a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin: 10px 0;
+        }
+        
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .stock-low {
+            background: #fff3cd;
+        }
+        
+        .stock-out {
+            background: #f8d7da;
+        }
+        
+        .stock-good {
+            background: #d4edda;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/odoo">← Kembali</a>
+            <h1>📦 Inventory / Stock dari Odoo</h1>
+        </div>
+        
+        <div class="content">
+            <?php if (isset($error)): ?>
+                <div class="alert-error">
+                    <strong>Error:</strong> <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (isset($inventory) && count($inventory) > 0): ?>
+                <h2>Daftar Stock Produk (Top 50)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product Code</th>
+                            <th>Product Name</th>
+                            <th>Quantity On Hand</th>
+                            <th>Reserved Qty</th>
+                            <th>Available Qty</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($inventory as $item): ?>
+                        <?php 
+                            $qty = $item['quantity'] ?? 0;
+                            $rowClass = '';
+                            if ($qty <= 0) {
+                                $rowClass = 'stock-out';
+                            } elseif ($qty < 10) {
+                                $rowClass = 'stock-low';
+                            } else {
+                                $rowClass = 'stock-good';
+                            }
+                        ?>
+                        <tr class="<?php echo $rowClass; ?>">
+                            <td><?php echo htmlspecialchars($item['product_id'][0] ?? '-'); ?></td>
+                            <td>
+                                <?php 
+                                if (isset($item['product_id']) && is_array($item['product_id'])) {
+                                    echo htmlspecialchars($item['product_id'][1]);
+                                } else {
+                                    echo '-';
+                                }
+                                ?>
+                            </td>
+                            <td><?php echo number_format($qty, 2, ',', '.'); ?></td>
+                            <td><?php echo number_format($item['reserved_quantity'] ?? 0, 2, ',', '.'); ?></td>
+                            <td>
+                                <?php 
+                                $available = $qty - ($item['reserved_quantity'] ?? 0);
+                                echo number_format($available, 2, ',', '.');
+                                ?>
+                            </td>
+                            <td>
+                                <?php 
+                                if (isset($item['location_id']) && is_array($item['location_id'])) {
+                                    echo htmlspecialchars($item['location_id'][1]);
+                                } else {
+                                    echo '-';
+                                }
+                                ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 5px;">
+                    <strong>Keterangan Warna:</strong><br>
+                    <span style="display: inline-block; width: 20px; height: 20px; background: #d4edda; margin-right: 5px;"></span> Stock Cukup (≥10)<br>
+                    <span style="display: inline-block; width: 20px; height: 20px; background: #fff3cd; margin-right: 5px;"></span> Stock Menipis (&lt;10)<br>
+                    <span style="display: inline-block; width: 20px; height: 20px; background: #f8d7da; margin-right: 5px;"></span> Habis (0)
+                </div>
+            <?php else: ?>
+                <div class="alert-error">
+                    Tidak ada data inventory. Silakan atur stock produk di Odoo terlebih dahulu.
+                </div>
+            <?php endif; ?>
+            
+            <a href="/odoo" class="btn">← Kembali ke Dashboard</a>
+            <a href="http://localhost:8069" target="_blank" class="btn">Buka Odoo Web →</a>
+        </div>
+    </div>
+</body>
+</html>

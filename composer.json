@@ -1,11 +1,12 @@
 {
     "name": "phalcon/project",
-    "description": "Phalcon PHP Framework Project",
+    "description": "Phalcon PHP Framework Project with Odoo Integration",
     "type": "project",
     "license": "MIT",
     "require": {
         "php": ">=8.0",
-        "ext-phalcon": "^5.0"
+        "ext-phalcon": "^5.0",
+        "guzzlehttp/guzzle": "^7.10"
     },
     "autoload": {
         "psr-4": {

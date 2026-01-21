@@ -1,6 +1,19 @@
-# 📶 WiFi Password Generator - Phalcon PHP
+# 📶 WiFi Password Generator - Phalcon PHP + Odoo ERP
 
-Sistem Generate Password WiFi Otomatis untuk User Baru menggunakan Phalcon PHP Framework dengan Docker.
+Sistem Generate Password WiFi Otomatis untuk User Baru menggunakan Phalcon PHP Framework dengan integrasi Odoo ERP System, semuanya berjalan di Docker.
+
+## ✨ Fitur
+
+- 🔐 Generate Password WiFi Otomatis
+- 📋 Manajemen History Password
+- 🔗 **Integrasi Odoo ERP** (Baru!)
+  - Customer Management
+  - Product Management
+  - Sales Orders
+  - Invoices
+  - Inventory Tracking
+- 🐳 Full Docker Setup (Nginx, PHP, MySQL, Odoo, PostgreSQL)
+- 📊 Database Management via PHPMyAdmin
 
 ## 📋 Persyaratan
 
@@ -8,57 +21,88 @@ Sistem Generate Password WiFi Otomatis untuk User Baru menggunakan Phalcon PHP F
 
 ---
 
-## 🚀 Cara Menjalankan Project
+## 🚀 Quick Start
 
-### 1. Buat File .env
-
-Jalankan di PowerShell:
+### Opsi 1: Setup dengan Odoo (Recommended)
 
 ```powershell
-@"
-APP_ENV=development
-APP_DEBUG=true
-
-DB_HOST=mysql
-DB_PORT=3306
-DB_NAME=phalcon_db
-DB_USER=phalcon_user
-DB_PASSWORD=phalcon_password
-
-NGINX_PORT=8080
-PHPMYADMIN_PORT=8081
-"@ | Out-File -FilePath .env -Encoding UTF8
+# Clone atau extract project
+# Jalankan script setup otomatis
+.\setup-odoo.ps1
 ```
 
-### 2. Jalankan Docker
+Script ini akan:
+- Install dependencies
+- Start semua containers (Phalcon + Odoo)
+- Setup database
+- Menampilkan informasi akses
 
+### Opsi 2: Setup Manual
+
+1. **Buat File .env**
+```powershell
+# File .env sudah ada, pastikan konfigurasi Odoo aktif
+```
+
+2. **Install Dependencies**
+```powershell
+docker-compose run --rm app composer install
+```
+
+3. **Start Containers**
 ```powershell
 docker-compose up -d
 ```
 
-Tunggu 30-60 detik untuk MySQL siap.
-
-### 3. Import Database
-
-**Cara 1: Via PowerShell (Cepat)**
+4. **Import Database Phalcon**
 ```powershell
 Get-Content database/schema.sql | docker exec -i phalcon_mysql mysql -u phalcon_user -pphalcon_password phalcon_db
 ```
 
-**Cara 2: Via phpMyAdmin (Mudah)**
-1. Buka http://localhost:8081
-2. Login → Username: `phalcon_user`, Password: `phalcon_password`
-3. Klik database `phalcon_db`
-4. Tab "Import" → Pilih file `database/schema.sql` → Import
+5. **Setup Odoo Database**
+- Buka http://localhost:8069
+- Buat database baru:
+  - Database Name: `odoo`
+  - Email: `admin@example.com`
+  - Password: `admin`
+  - Language: Indonesian
+  - Country: Indonesia
 
-### 4. Akses Aplikasi
+---
 
-| URL | Fungsi |
-|-----|--------|
-| http://localhost:8080 | Homepage |
-| http://localhost:8080/wifi | Generate Password WiFi |
-| http://localhost:8080/wifi/history | Riwayat Password |
-| http://localhost:8081 | phpMyAdmin |
+## 🌐 URL Akses
+
+| Service | URL | Keterangan |
+|---------|-----|------------|
+| Phalcon App | http://localhost:8181 | Aplikasi utama |
+| WiFi Generator | http://localhost:8181/wifi | Generate password WiFi |
+| Odoo Dashboard | http://localhost:8181/odoo | Dashboard integrasi Odoo |
+| Odoo Web | http://localhost:8069 | Odoo ERP System |
+| PHPMyAdmin | http://localhost:8182 | MySQL Management |
+
+---
+
+## 🔗 Fitur Integrasi Odoo
+
+### Test Connection
+```
+http://localhost:8181/odoo/test
+```
+
+### Available Endpoints
+- `/odoo` - Dashboard & Customer List
+- `/odoo/products` - Product List dari Odoo
+- `/odoo/sales-orders` - Sales Orders
+- `/odoo/invoices` - Invoice List
+- `/odoo/inventory` - Stock Inventory
+- `/odoo/create-customer` - Create Customer
+- `/odoo/sync-wifi` - Sync WiFi data ke Odoo
+
+### Test Script
+```powershell
+# Test koneksi Odoo
+.\test-odoo.ps1
+```
 
 ---
 
@@ -167,9 +211,13 @@ public/              # Entry point & assets (css, js, img)
 
 ---
 
-## 📚 Dokumentasi
+## 📚 Dokumentasi Lengkap
 
-- [Phalcon Docs](https://docs.phalcon.io/)
-- [Docker Docs](https://docs.docker.com/)
+- **[ODOO_QUICKSTART.md](ODOO_QUICKSTART.md)** - Panduan cepat setup Odoo
+- **[ODOO_INTEGRATION.md](ODOO_INTEGRATION.md)** - Dokumentasi lengkap integrasi Odoo
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Arsitektur sistem & network
+- [Phalcon Docs](https://docs.phalcon.io/) - Dokumentasi Phalcon PHP
+- [Odoo Docs](https://www.odoo.com/documentation) - Dokumentasi Odoo
+- [Docker Docs](https://docs.docker.com/) - Dokumentasi Docker
 
 ---

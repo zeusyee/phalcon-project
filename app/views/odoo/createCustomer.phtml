@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odoo - Create Customer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .header a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin: 10px 0;
+        }
+        
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .required {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/odoo">← Kembali</a>
+            <h1>➕ Tambah Customer Baru</h1>
+        </div>
+        
+        <div class="content">
+            <?php if (isset($success)): ?>
+                <div class="alert-success">
+                    <strong>Berhasil!</strong> Customer berhasil dibuat di Odoo!<br>
+                    Customer ID: <?php echo htmlspecialchars($customerId ?? '-'); ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (isset($error)): ?>
+                <div class="alert-error">
+                    <strong>Error:</strong> <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>
+            
+            <form method="POST" action="/odoo/create-customer">
+                <div class="form-group">
+                    <label for="name">Nama Customer <span class="required">*</span></label>
+                    <input type="text" id="name" name="name" required placeholder="Masukkan nama customer">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="customer@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">No. Telepon</label>
+                    <input type="text" id="phone" name="phone" placeholder="08xx-xxxx-xxxx">
+                </div>
+                
+                <div class="form-group">
+                    <label for="mobile">No. HP / Mobile</label>
+                    <input type="text" id="mobile" name="mobile" placeholder="08xx-xxxx-xxxx">
+                </div>
+                
+                <div class="form-group">
+                    <label for="street">Alamat</label>
+                    <textarea id="street" name="street" rows="3" placeholder="Masukkan alamat lengkap"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="city">Kota</label>
+                    <input type="text" id="city" name="city" placeholder="Nama kota">
+                </div>
+                
+                <div class="form-group">
+                    <label for="zip">Kode Pos</label>
+                    <input type="text" id="zip" name="zip" placeholder="12345">
+                </div>
+                
+                <div class="form-group">
+                    <label for="country_id">Negara</label>
+                    <select id="country_id" name="country_id">
+                        <option value="">-- Pilih Negara --</option>
+                        <option value="100" selected>Indonesia</option>
+                        <option value="233">United States</option>
+                        <option value="105">Malaysia</option>
+                        <option value="195">Singapore</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="is_company">Tipe</label>
+                    <select id="is_company" name="is_company">
+                        <option value="0" selected>Individual</option>
+                        <option value="1">Company</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="comment">Catatan</label>
+                    <textarea id="comment" name="comment" rows="3" placeholder="Catatan tambahan (opsional)"></textarea>
+                </div>
+                
+                <button type="submit" class="btn">💾 Simpan Customer</button>
+                <a href="/odoo" class="btn btn-secondary">❌ Batal</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

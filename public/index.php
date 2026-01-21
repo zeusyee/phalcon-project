@@ -9,6 +9,9 @@ define('BASE_PATH', dirname(__DIR__));
 define('APP_PATH', BASE_PATH . '/app');
 
 try {
+    // Load Composer autoloader
+    require BASE_PATH . '/vendor/autoload.php';
+    
     // Register an autoloader
     require APP_PATH . '/config/loader.php';
 

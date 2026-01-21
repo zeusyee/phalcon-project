@@ -11,6 +11,10 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      ODOO_URL: ${ODOO_URL}
+      ODOO_DB: ${ODOO_DB}
+      ODOO_USERNAME: ${ODOO_USERNAME}
+      ODOO_PASSWORD: ${ODOO_PASSWORD}
     volumes:
       - ./:/var/www/html
     networks:
@@ -66,10 +70,52 @@ services:
     depends_on:
       - mysql
 
+  # Odoo ERP System
+  postgres_odoo:
+    image: postgres:15
+    container_name: phalcon_odoo_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: ${ODOO_DB_PASSWORD:-odoo123}
+    volumes:
+      - odoo_postgres_data:/var/lib/postgresql/data
+    networks:
+      - phalcon_network
+    # Port PostgreSQL tidak perlu di-expose keluar (hanya akses internal)
+    # Jika perlu akses dari luar, uncomment:
+    # ports:
+    #   - "5433:5432"
+
+  odoo:
+    image: odoo:17.0
+    container_name: phalcon_odoo
+    restart: unless-stopped
+    ports:
+      - "${ODOO_PORT:-8069}:8069"
+    environment:
+      HOST: postgres_odoo
+      USER: odoo
+      PASSWORD: ${ODOO_DB_PASSWORD:-odoo123}
+      # Master password untuk manage databases (PENTING: ubah di production!)
+      ODOO_MASTER_PASSWORD: ${ODOO_MASTER_PASSWORD:-admin}
+    volumes:
+      - odoo_data:/var/lib/odoo
+      - ./odoo-addons:/mnt/extra-addons  # Folder untuk custom addons
+    networks:
+      - phalcon_network
+    depends_on:
+      - postgres_odoo
+
 networks:
   phalcon_network:
     driver: bridge
 
 volumes:
   mysql_data:
+    driver: local
+  odoo_postgres_data:
+    driver: local
+  odoo_data:
     driver: local

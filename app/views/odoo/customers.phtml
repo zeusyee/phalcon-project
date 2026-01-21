@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odoo - Customers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .header a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin: 10px 0;
+        }
+        
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .badge {
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/odoo">← Kembali</a>
+            <h1>👥 Customers dari Odoo</h1>
+        </div>
+        
+        <div class="content">
+            <?php if (isset($error)): ?>
+                <div class="alert-error">
+                    <strong>Error:</strong> <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (isset($customers) && count($customers) > 0): ?>
+                <h2>📋 Daftar Customers (Top 50)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Reference</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>City</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($customers as $customer): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($customer['id']); ?></td>
+                            <td>
+                                <?php echo htmlspecialchars($customer['name']); ?>
+                                <?php if (isset($customer['ref']) && strpos($customer['ref'], 'WIFI-') === 0): ?>
+                                    <span class="badge">WiFi User</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($customer['ref'] ?? '-'); ?></td>
+                            <td><?php echo htmlspecialchars($customer['email'] ?? '-'); ?></td>
+                            <td><?php echo htmlspecialchars($customer['phone'] ?? $customer['mobile'] ?? '-'); ?></td>
+                            <td><?php echo htmlspecialchars($customer['city'] ?? '-'); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <div class="alert-error">
+                    Tidak ada data customer. Silakan buat customer baru di Odoo atau gunakan menu Create Customer.
+                </div>
+            <?php endif; ?>
+            
+            <a href="/odoo" class="btn">← Kembali ke Dashboard</a>
+            <a href="http://localhost:8069" target="_blank" class="btn">Buka Odoo Web →</a>
+        </div>
+    </div>
+</body>
+</html>
