@@ -59,7 +59,7 @@ services:
     container_name: zf_phpmyadmin
     restart: unless-stopped
     ports:
-      - "8182:80"
+      - "8088:80"
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
@@ -89,7 +89,7 @@ services:
     #   - "5433:5432"
 
   odoo:
-    image: odoo:17.0
+    image: odoo:19
     container_name: zf_odoo
     restart: unless-stopped
     ports:

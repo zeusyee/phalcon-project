@@ -29,6 +29,9 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .header a {
@@ -57,7 +60,14 @@
             margin-bottom: 20px;
         }
         
-        table {
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
@@ -77,6 +87,36 @@
         
         tr:hover {
             background: #f5f5f5;
+        }
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: separate;
+            border-spacing: 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 16px 18px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        tr:nth-child(even) td {
+            background: #f8f9fa;
+        }
+        tr:hover td {
+            background: #e9ecef;
         }
         
         .badge {
@@ -98,16 +138,108 @@
             margin-top: 20px;
             margin-right: 10px;
         }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input, 
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #4f46e5;
+            font-weight: 600;
+            font-size: 15px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.07);
+            border: 1.5px solid #c7d2fe;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+        .btn-back:hover {
+            background: linear-gradient(90deg, #c7d2fe 0%, #e0e7ff 100%);
+            color: #3730a3;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.13);
+            text-decoration: none;
+        }
+        .btn-back .icon {
+            font-size: 18px;
+            margin-right: 2px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <a href="/odoo">← Kembali</a>
-            <h1>👥 Customers dari Odoo</h1>
+            <div style="display: flex; align-items: center; gap: 18px;">
+                <a href="/odoo" class="btn-back">
+                    <span class="icon">&#8592;</span> Kembali
+                </a>
+                <h1>👥 Customers dari Odoo</h1>
+            </div>
+            <button class="btn btn-primary" onclick="showCreateModal()">+ Tambah Customer</button>
         </div>
         
         <div class="content">
+            <div id="alertSuccess" class="alert-success" style="display:none;"></div>
+            
             <?php if (isset($error)): ?>
                 <div class="alert-error">
                     <strong>Error:</strong> <?php echo htmlspecialchars($error); ?>
@@ -125,6 +257,7 @@
                             <th>Email</th>
                             <th>Phone</th>
                             <th>City</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -141,6 +274,9 @@
                             <td><?php echo htmlspecialchars($customer['email'] ?? '-'); ?></td>
                             <td><?php echo htmlspecialchars($customer['phone'] ?? $customer['mobile'] ?? '-'); ?></td>
                             <td><?php echo htmlspecialchars($customer['city'] ?? '-'); ?></td>
+                            <td>
+                                <button class="btn btn-danger" style="margin-top: 0; padding: 5px 10px; font-size: 12px;" onclick="deleteCustomer(<?php echo $customer['id']; ?>)">Delete</button>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -155,5 +291,185 @@
             <a href="http://localhost:8069" target="_blank" class="btn">Buka Odoo Web →</a>
         </div>
     </div>
+
+    <!-- Modal Create Customer -->
+    <div id="customerModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Tambah Customer</h2>
+            <form id="customerForm">
+                <div class="form-group">
+                    <label for="name">Nama Customer *</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="text" id="phone" name="phone">
+                </div>
+                
+                <div class="form-group">
+                    <label for="mobile">Mobile</label>
+                    <input type="text" id="mobile" name="mobile">
+                </div>
+                
+                <div class="form-group">
+                    <label for="is_company">Tipe</label>
+                    <select id="is_company" name="is_company">
+                        <option value="0">Individual</option>
+                        <option value="1">Company</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" placeholder="Mr, Mrs, Dr, etc">
+                </div>
+                
+                <div class="form-group">
+                    <label for="function">Jabatan/Fungsi</label>
+                    <input type="text" id="function" name="function" placeholder="Manager, Director, etc">
+                </div>
+                
+                <div class="form-group">
+                    <label for="vat">NPWP/VAT</label>
+                    <input type="text" id="vat" name="vat">
+                </div>
+                
+                <div class="form-group">
+                    <label for="website">Website</label>
+                    <input type="url" id="website" name="website">
+                </div>
+                
+                <div class="form-group">
+                    <label for="street">Alamat</label>
+                    <input type="text" id="street" name="street">
+                </div>
+                
+                <div class="form-group">
+                    <label for="street2">Alamat 2</label>
+                    <input type="text" id="street2" name="street2">
+                </div>
+                
+                <div class="form-group">
+                    <label for="city">Kota</label>
+                    <input type="text" id="city" name="city">
+                </div>
+                
+                <div class="form-group">
+                    <label for="state_id">Provinsi</label>
+                    <input type="number" id="state_id" name="state_id" placeholder="ID Provinsi (opsional)">
+                </div>
+                
+                <div class="form-group">
+                    <label for="zip">Kode Pos</label>
+                    <input type="text" id="zip" name="zip">
+                </div>
+                
+                <div class="form-group">
+                    <label for="country_id">Negara</label>
+                    <input type="number" id="country_id" name="country_id" placeholder="ID Negara (opsional)">
+                </div>
+                
+                <div class="form-group">
+                    <label for="comment">Catatan</label>
+                    <textarea id="comment" name="comment" rows="3"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">Simpan</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Tambah Customer';
+            document.getElementById('customerForm').reset();
+            document.getElementById('customerModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('customerModal').style.display = 'none';
+        }
+
+        document.getElementById('customerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const url = '/odoo/create-customer';
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    closeModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        });
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.textContent = message;
+            alertDiv.style.cssText = 'padding: 15px; border-radius: 8px; margin-bottom: 20px; display: block;';
+            if (type === 'success') {
+                alertDiv.style.background = '#d4edda';
+                alertDiv.style.color = '#155724';
+            } else {
+                alertDiv.style.background = '#f8d7da';
+                alertDiv.style.color = '#721c24';
+            }
+            
+            const container = document.querySelector('.content');
+            container.insertBefore(alertDiv, container.children[1]);
+            
+            setTimeout(() => alertDiv.remove(), 5000);
+        }
+
+        function deleteCustomer(id) {
+            if (!confirm('Yakin ingin menghapus customer ini?')) return;
+            
+            fetch(`/odoo/delete-customer/${id}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            })
+            .catch(error => {
+                showAlert('Error: ' + error.message, 'error');
+            });
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>

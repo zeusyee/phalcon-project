@@ -18,31 +18,74 @@
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+        }
+        
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
         
         table {
             width: 100%;
             background: white;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
         }
-        
         th, td {
-            padding: 15px;
+            padding: 16px 18px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
         }
-        
         th {
             background: #667eea;
             color: white;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        tr:nth-child(even) td {
+            background: #f8f9fa;
+        }
+        tr:hover td {
+            background: #e9ecef;
+        }
+        .btn, .btn-sm {
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover, .btn-sm:hover {
+            box-shadow: 0 2px 8px rgba(102,126,234,0.15);
+            filter: brightness(1.08);
         }
         
         .alert-error {
             background: #f8d7da;
             color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -55,28 +98,148 @@
             font-weight: bold;
         }
         
-        .badge-stockable {
-            background: #d4edda;
-            color: #155724;
+        .badge-service { background: #cce5ff; color: #004085; }
+        .badge-consumable { background: #fff3cd; color: #856404; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
         }
         
-        .badge-service {
-            background: #cce5ff;
-            color: #004085;
+        .modal-content {
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+            margin: 50px auto;
+            padding: 38px 32px 32px 32px;
+            border-radius: 16px;
+            max-width: 420px;
+            box-shadow: 0 10px 40px rgba(102,126,234,0.18);
+            position: relative;
+        }
+        .modal-content h2 {
+            margin: 0 0 24px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-content h2:before {
+            content: "\1F4E6";
+            font-size: 22px;
+        }
         }
         
-        .badge-consumable {
-            background: #fff3cd;
-            color: #856404;
+        .modal-content h2 {
+            margin: 0 0 20px;
+            font-size: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 10px 38px 10px 12px;
+            border: 1.5px solid #c3c6d1;
+            border-radius: 6px;
+            background: #fff url('data:image/svg+xml;utf8,<svg fill="%23667eea" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7.293 8.293a1 1 0 011.414 0L10 9.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/></svg>') no-repeat right 12px center/18px 18px;
+            font-size: 15px;
+            transition: border 0.2s, box-shadow 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #c3c6d1;
+            border-radius: 6px;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px #e0e7ff;
+            outline: none;
+        }
+        .form-group input:disabled,
+        .form-group select:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+        }
+        
+        .form-group input:disabled,
+        .form-group select:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+            justify-content: flex-end;
+        }
+        
+        .actions { display: flex; gap: 5px; }
+        
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #4f46e5;
+            font-weight: 600;
+            font-size: 15px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.07);
+            border: 1.5px solid #c7d2fe;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+        .btn-back:hover {
+            background: linear-gradient(90deg, #c7d2fe 0%, #e0e7ff 100%);
+            color: #3730a3;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.13);
+            text-decoration: none;
+        }
+        .btn-back .icon {
+            font-size: 18px;
+            margin-right: 2px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <a href="/odoo">← Kembali</a>
-            <h1>📦 Daftar Products dari Odoo</h1>
+            <div style="display: flex; align-items: center; gap: 18px;">
+                <a href="/odoo" class="btn-back">
+                    <span class="icon">&#8592;</span> Kembali
+                </a>
+                <h1>📦 Products dari Odoo</h1>
+            </div>
+            <button class="btn btn-primary" onclick="showCreateModal()">+ Tambah Product</button>
         </div>
+        
+        <div id="alertSuccess" class="alert-success" style="display:none;"></div>
         
         <?php if (isset($error)): ?>
             <div class="alert-error">
@@ -89,11 +252,12 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Name</th>
-                        <th>Code</th>
-                        <th>Type</th>
-                        <th>Sales Price</th>
-                        <th>Cost</th>
+                        <th>Nama Product</th>
+                        <th>Kode</th>
+                        <th>Tipe</th>
+                        <th>Harga Jual</th>
+                        <th>Harga Cost</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -105,9 +269,7 @@
                         <td>
                             <?php 
                             $type = $product['type'] ?? 'consu';
-                            $badgeClass = 'badge-consumable';
-                            if ($type === 'product') $badgeClass = 'badge-stockable';
-                            if ($type === 'service') $badgeClass = 'badge-service';
+                            $badgeClass = $type === 'service' ? 'badge-service' : 'badge-consumable';
                             ?>
                             <span class="badge <?php echo $badgeClass; ?>">
                                 <?php echo strtoupper($type); ?>
@@ -115,6 +277,10 @@
                         </td>
                         <td>Rp <?php echo number_format($product['list_price'] ?? 0, 0, ',', '.'); ?></td>
                         <td>Rp <?php echo number_format($product['standard_price'] ?? 0, 0, ',', '.'); ?></td>
+                        <td class="actions">
+                            <button class="btn btn-warning btn-sm" onclick='editProduct(<?php echo json_encode($product); ?>)'>Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteProduct(<?php echo $product['id']; ?>)">Delete</button>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -125,5 +291,139 @@
             </div>
         <?php endif; ?>
     </div>
+
+    <!-- Modal Create/Edit Product -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Tambah Product</h2>
+            <form id="productForm">
+                <input type="hidden" id="productId">
+                
+                <div class="form-group">
+                    <label for="name">Nama Product *</label>
+                    <input type="text" id="name" name="name" required placeholder="Masukkan nama product">
+                </div>
+                
+                <div class="form-group">
+                    <label for="default_code">Kode/SKU</label>
+                    <input type="text" id="default_code" name="default_code" placeholder="Opsional">
+                </div>
+                
+                <div class="form-group">
+                    <label for="type">Tipe Product *</label>
+                    <select id="type" name="type" required>
+                        <option value="consu">Consumable</option>
+                        <option value="service">Service</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="list_price">Harga Jual *</label>
+                    <input type="number" id="list_price" name="list_price" step="0.01" required placeholder="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="standard_price">Harga Cost</label>
+                    <input type="number" id="standard_price" name="standard_price" step="0.01" placeholder="0">
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-success">Simpan</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let isEditMode = false;
+
+        function showCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Tambah Product';
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('type').disabled = false;
+            isEditMode = false;
+            document.getElementById('productModal').style.display = 'block';
+        }
+
+        function editProduct(product) {
+            document.getElementById('modalTitle').textContent = 'Edit Product';
+            document.getElementById('productId').value = product.id;
+            document.getElementById('name').value = product.name;
+            document.getElementById('default_code').value = product.default_code || '';
+            document.getElementById('type').value = product.type || 'consu';
+            document.getElementById('list_price').value = product.list_price || 0;
+            document.getElementById('standard_price').value = product.standard_price || 0;
+            document.getElementById('type').disabled = true;
+            isEditMode = true;
+            document.getElementById('productModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('alertSuccess');
+            alertDiv.textContent = message;
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.style.display = 'block';
+            setTimeout(() => { alertDiv.style.display = 'none'; }, 5000);
+        }
+
+        document.getElementById('productForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const productId = document.getElementById('productId').value;
+            const url = isEditMode ? `/odoo/update-product/${productId}` : '/odoo/create-product';
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    closeModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        });
+
+        async function deleteProduct(id) {
+            if (!confirm('Yakin ingin menghapus product ini?')) return;
+            
+            try {
+                const response = await fetch(`/odoo/delete-product/${id}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('productModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
 </body>
 </html>

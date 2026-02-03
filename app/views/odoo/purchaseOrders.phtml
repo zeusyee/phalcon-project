@@ -4,49 +4,152 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Odoo - Purchase Orders</title>
+    <link rel="stylesheet" href="/css/style.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
+                        /* Modern dropdown for all selects in forms */
+                        .modal-content select,
+                        .order-products-box select {
+                            width: 100%;
+                            min-width: 180px;
+                            padding: 10px 38px 10px 14px;
+                            border: 1.5px solid #c3c6d1;
+                            border-radius: 8px;
+                            background: #fff url('data:image/svg+xml;utf8,<svg fill="%23667eea" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7.293 8.293a1 1 0 011.414 0L10 9.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/></svg>') no-repeat right 14px center/18px 18px;
+                            font-size: 15px;
+                            box-shadow: 0 2px 8px rgba(102,126,234,0.07);
+                            transition: border 0.2s, box-shadow 0.2s;
+                            appearance: none;
+                            -webkit-appearance: none;
+                            -moz-appearance: none;
+                        }
+                        .modal-content select:focus,
+                        .order-products-box select:focus {
+                            border-color: #667eea;
+                            box-shadow: 0 0 0 2px #e0e7ff;
+                            outline: none;
+                        }
+                        .modal-content select:hover,
+                        .order-products-box select:hover {
+                            border-color: #a3a8c5;
+                        }
+                        .order-line-item {
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            margin-bottom: 8px;
+                        }
+                        .order-line-item select {
+                            flex: 2;
+                        }
+                        .order-line-item input[type="number"] {
+                            flex: 1;
+                            min-width: 60px;
+                            max-width: 90px;
+                            padding: 10px 12px;
+                            border: 1.5px solid #c3c6d1;
+                            border-radius: 8px;
+                            font-size: 15px;
+                            box-shadow: 0 2px 8px rgba(102,126,234,0.07);
+                            transition: border 0.2s, box-shadow 0.2s;
+                        }
+                        .order-line-item input[type="number"]:focus {
+                            border-color: #667eea;
+                            box-shadow: 0 0 0 2px #e0e7ff;
+                            outline: none;
+                        }
+                        .order-line-item input[type="number"]::-webkit-inner-spin-button,
+                        .order-line-item input[type="number"]::-webkit-outer-spin-button {
+                            -webkit-appearance: none;
+                            margin: 0;
+                        }
+                        .order-line-item input[type="number"] {
+                            -moz-appearance: textfield;
+                        }
+                .select-beauty {
+                    width: 100%;
+                    padding: 10px 38px 10px 12px;
+                    border: 1.5px solid #c3c6d1;
+                    border-radius: 6px;
+                    background: #fff url('data:image/svg+xml;utf8,<svg fill="%23667eea" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7.293 8.293a1 1 0 011.414 0L10 9.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/></svg>') no-repeat right 12px center/18px 18px;
+                    font-size: 15px;
+                    transition: border 0.2s, box-shadow 0.2s;
+                    appearance: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                }
+                .select-beauty:focus {
+                    border-color: #667eea;
+                    box-shadow: 0 0 0 2px #e0e7ff;
+                    outline: none;
+                }
+                .select-beauty:hover {
+                    border-color: #a3a8c5;
+                }
         .container {
-            max-width: 1400px;
-            margin: 0 auto;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
         }
         
         .header {
             background: white;
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .header a {
-            color: #667eea;
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
             text-decoration: none;
-            font-weight: 600;
+            display: inline-block;
+            font-size: 14px;
         }
         
-        .header h1 {
-            color: #333;
-            margin: 10px 0;
-        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
         
-        .content {
+        table {
+            width: 100%;
             background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-collapse: separate;
+            border-spacing: 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 16px 18px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        tr:nth-child(even) td {
+            background: #f8f9fa;
+        }
+        tr:hover td {
+            background: #e9ecef;
+        }
+        .btn {
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover {
+            box-shadow: 0 2px 8px rgba(102,126,234,0.15);
+            filter: brightness(1.08);
         }
         
         .alert-error {
@@ -57,168 +160,417 @@
             margin-bottom: 20px;
         }
         
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        th {
-            background: #667eea;
-            color: white;
-            font-weight: 600;
-        }
-        
-        tr:hover {
-            background: #f5f5f5;
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
         
         .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 5px 10px;
+            border-radius: 5px;
             font-size: 12px;
             font-weight: bold;
         }
         
-        .badge-draft {
-            background: #ffc107;
-            color: #000;
+        .badge-draft { background: #ffc107; color: #000; }
+        .badge-purchase { background: #28a745; color: white; }
+        .badge-done { background: #17a2b8; color: white; }
+        .badge-cancel { background: #dc3545; color: white; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
         }
         
-        .badge-purchase {
-            background: #28a745;
-            color: white;
+        .modal-content {
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+            margin: 50px auto;
+            padding: 38px 32px 32px 32px;
+            border-radius: 16px;
+            max-width: 420px;
+            box-shadow: 0 10px 40px rgba(102,126,234,0.18);
+            position: relative;
+        }
+        .modal-content h2 {
+            margin: 0 0 24px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-content h2:before {
+            content: "\1F6D2";
+            font-size: 22px;
+        }
+            max-height: 85vh;
+            overflow-y: auto;
         }
         
-        .badge-done {
-            background: #17a2b8;
-            color: white;
+        .modal-content h2 {
+            margin: 0 0 20px;
+            font-size: 20px;
         }
         
-        .badge-cancel {
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 10px 38px 10px 12px;
+            border: 1.5px solid #c3c6d1;
+            border-radius: 6px;
+            background: #fff url('data:image/svg+xml;utf8,<svg fill="%23667eea" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7.293 8.293a1 1 0 011.414 0L10 9.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/></svg>') no-repeat right 12px center/18px 18px;
+            font-size: 15px;
+            transition: border 0.2s, box-shadow 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #c3c6d1;
+            border-radius: 6px;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px #e0e7ff;
+            outline: none;
+        }
+        .form-group input:disabled,
+        .form-group select:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+            justify-content: flex-end;
+        }
+        
+        .order-lines-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+        }
+        
+        .order-lines-section h4 {
+            margin: 0 0 15px;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .order-line-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: end;
+        }
+        
+        .order-line-item select {
+            flex: 2;
+        }
+        
+        .order-line-item input {
+            flex: 1;
+            width: 80px;
+        }
+        
+        .order-line-item .btn-remove {
             background: #dc3545;
             color: white;
-        }
-        
-        .badge-waiting {
-            background: #fd7e14;
-            color: white;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
+            border: none;
+            padding: 10px 15px;
             border-radius: 5px;
-            margin-top: 20px;
-            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .btn-add-line {
+            background: linear-gradient(90deg, #38bdf8 0%, #667eea 100%);
+            color: #fff;
+            border: none;
+            padding: 9px 22px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .btn-add-line:hover {
+            background: linear-gradient(90deg, #0ea5e9 0%, #667eea 100%);
+            box-shadow: 0 4px 16px rgba(102,126,234,0.13);
+        }
+        
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #4f46e5;
+            font-weight: 600;
+            font-size: 15px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.07);
+            border: 1.5px solid #c7d2fe;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+        .btn-back:hover {
+            background: linear-gradient(90deg, #c7d2fe 0%, #e0e7ff 100%);
+            color: #3730a3;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.13);
+            text-decoration: none;
+        }
+        .btn-back .icon {
+            font-size: 18px;
+            margin-right: 2px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <a href="/odoo">← Kembali</a>
-            <h1>🛍️ Purchase Orders dari Odoo</h1>
+            <div style="display: flex; align-items: center; gap: 18px;">
+                <a href="/odoo" class="btn-back">
+                    <span class="icon">&#8592;</span> Kembali
+                </a>
+                <h1>📦 Purchase Orders dari Odoo</h1>
+            </div>
+            <button class="btn btn-primary" onclick="showCreateModal()">+ Buat Purchase Order</button>
         </div>
         
-        <div class="content">
-            <?php if (isset($error) && $error): ?>
-                <div class="alert-error">
-                    <strong>Error:</strong> <?php echo htmlspecialchars($error); ?>
+        <div id="alertSuccess" class="alert-success" style="display:none;"></div>
+        
+        <?php if (isset($error)): ?>
+            <div class="alert-error">
+                <strong>Error:</strong> <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if (isset($orders) && count($orders) > 0): ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Vendor</th>
+                        <th>Tanggal Order</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($orders as $order): ?>
+                    <tr>
+                        <td><strong><?php echo htmlspecialchars($order['name'] ?? '-'); ?></strong></td>
+                        <td>
+                            <?php 
+                            if (isset($order['partner_id']) && is_array($order['partner_id'])) {
+                                echo htmlspecialchars($order['partner_id'][1]);
+                            } else {
+                                echo '-';
+                            }
+                            ?>
+                        </td>
+                        <td><?php echo htmlspecialchars($order['date_order'] ?? '-'); ?></td>
+                        <td><strong>Rp <?php echo number_format($order['amount_total'] ?? 0, 0, ',', '.'); ?></strong></td>
+                        <td>
+                            <?php 
+                            $state = $order['state'] ?? 'draft';
+                            $badges = [
+                                'draft' => ['class' => 'badge-draft', 'label' => 'RFQ'],
+                                'purchase' => ['class' => 'badge-purchase', 'label' => 'CONFIRMED'],
+                                'done' => ['class' => 'badge-done', 'label' => 'DONE'],
+                                'cancel' => ['class' => 'badge-cancel', 'label' => 'CANCELLED']
+                            ];
+                            $badge = $badges[$state] ?? $badges['draft'];
+                            ?>
+                            <span class="badge <?php echo $badge['class']; ?>"><?php echo $badge['label']; ?></span>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px; margin: 0;" onclick="deletePurchaseOrder(<?php echo $order['id']; ?>)">Delete</button>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <div class="alert-error">
+                Tidak ada data purchase order.
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Modal Create Purchase Order -->
+    <div id="purchaseOrderModal" class="modal">
+        <div class="modal-content">
+            <h2>Buat Purchase Order Baru</h2>
+            <form id="purchaseOrderForm">
+                <div class="form-group">
+                    <label for="partner_id">Vendor *</label>
+                    <select id="partner_id" name="partner_id" required>
+                        <option value="">-- Pilih Vendor --</option>
+                        <?php if (isset($vendors) && count($vendors) > 0): ?>
+                            <?php foreach ($vendors as $vendor): ?>
+                                <option value="<?php echo $vendor['id']; ?>">
+                                    <?php echo htmlspecialchars($vendor['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
                 </div>
-            <?php endif; ?>
-            
-            <?php if (isset($orders) && count($orders) > 0): ?>
-                <h2>Daftar Purchase Orders (Top 20)</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Order #</th>
-                            <th>Vendor</th>
-                            <th>Order Date</th>
-                            <th>Total Amount</th>
-                            <th>Invoice Status</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($orders as $order): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($order['name'] ?? '-'); ?></td>
-                            <td>
-                                <?php 
-                                if (isset($order['partner_id']) && is_array($order['partner_id'])) {
-                                    echo htmlspecialchars($order['partner_id'][1]);
-                                } else {
-                                    echo '-';
-                                }
-                                ?>
-                            </td>
-                            <td><?php echo htmlspecialchars($order['date_order'] ?? '-'); ?></td>
-                            <td>Rp <?php echo number_format($order['amount_total'] ?? 0, 0, ',', '.'); ?></td>
-                            <td>
-                                <?php 
-                                $invoiceStatus = $order['invoice_status'] ?? 'no';
-                                $badgeClass = 'badge-draft';
-                                $label = $invoiceStatus;
-                                
-                                if ($invoiceStatus === 'invoiced') {
-                                    $badgeClass = 'badge-done';
-                                    $label = 'INVOICED';
-                                } elseif ($invoiceStatus === 'to invoice') {
-                                    $badgeClass = 'badge-waiting';
-                                    $label = 'TO INVOICE';
-                                } elseif ($invoiceStatus === 'no') {
-                                    $badgeClass = 'badge-draft';
-                                    $label = 'NO INVOICE';
-                                }
-                                ?>
-                                <span class="badge <?php echo $badgeClass; ?>"><?php echo $label; ?></span>
-                            </td>
-                            <td>
-                                <?php 
-                                $state = $order['state'] ?? 'draft';
-                                $stateBadge = 'badge-draft';
-                                $stateLabel = $state;
-                                
-                                if ($state === 'purchase') {
-                                    $stateBadge = 'badge-purchase';
-                                    $stateLabel = 'CONFIRMED';
-                                } elseif ($state === 'done') {
-                                    $stateBadge = 'badge-done';
-                                    $stateLabel = 'DONE';
-                                } elseif ($state === 'draft') {
-                                    $stateBadge = 'badge-draft';
-                                    $stateLabel = 'RFQ';
-                                } elseif ($state === 'cancel') {
-                                    $stateBadge = 'badge-cancel';
-                                    $stateLabel = 'CANCELLED';
-                                }
-                                ?>
-                                <span class="badge <?php echo $stateBadge; ?>"><?php echo $stateLabel; ?></span>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php else: ?>
-                <div class="alert-error">
-                    Tidak ada data purchase order. Silakan buat purchase order di Odoo terlebih dahulu.
+                
+                <div class="form-group">
+                    <label for="partner_ref">Referensi Vendor</label>
+                    <input type="text" id="partner_ref" name="partner_ref" placeholder="Opsional">
                 </div>
-            <?php endif; ?>
-            
-            <a href="/odoo" class="btn">← Kembali ke Dashboard</a>
-            <a href="http://localhost:8069" target="_blank" class="btn">Buka Odoo Web →</a>
+                
+                <div class="order-lines-section">
+                    <h4>📦 Produk yang Dipesan</h4>
+                    <div id="orderLinesContainer">
+                        <div class="order-line-item">
+                            <select name="product_ids[]" required>
+                                <option value="">-- Pilih Produk --</option>
+                                <?php if (isset($products) && count($products) > 0): ?>
+                                    <?php foreach ($products as $product): ?>
+                                        <option value="<?php echo $product['id']; ?>">
+                                            <?php echo htmlspecialchars($product['name']); ?> - Rp <?php echo number_format($product['standard_price'] ?? 0, 0, ',', '.'); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                            <input type="number" name="quantities[]" value="1" min="1" placeholder="Qty" required>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-add-line" onclick="addOrderLine()">+ Tambah Produk</button>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-success">Buat Order</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">Batal</button>
+                </div>
+            </form>
         </div>
     </div>
+
+    <script>
+        function showCreateModal() {
+            document.getElementById('purchaseOrderForm').reset();
+            document.getElementById('purchaseOrderModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('purchaseOrderModal').style.display = 'none';
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('alertSuccess');
+            alertDiv.textContent = message;
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.style.display = 'block';
+            setTimeout(() => { alertDiv.style.display = 'none'; }, 5000);
+        }
+
+        document.getElementById('purchaseOrderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('/odoo/create-purchase-order', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    closeModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        });
+
+        async function deletePurchaseOrder(id) {
+            if (!confirm('Yakin ingin menghapus Purchase Order ini?')) return;
+            
+            try {
+                const response = await fetch(`/odoo/delete-purchase-order/${id}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('purchaseOrderModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Add new order line
+        function addOrderLine() {
+            const container = document.getElementById('orderLinesContainer');
+            const firstLine = container.querySelector('.order-line-item');
+            const newLine = document.createElement('div');
+            newLine.className = 'order-line-item';
+            newLine.innerHTML = `
+                <select name="product_ids[]" required>
+                    ${firstLine.querySelector('select').innerHTML}
+                </select>
+                <input type="number" name="quantities[]" value="1" min="1" placeholder="Qty" required>
+                <button type="button" class="btn-remove" onclick="removeOrderLine(this)">✕</button>
+            `;
+            container.appendChild(newLine);
+        }
+
+        // Remove order line
+        function removeOrderLine(btn) {
+            btn.parentElement.remove();
+        }
+    </script>
 </body>
 </html>

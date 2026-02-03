@@ -94,6 +94,26 @@ $router->add(
     ]
 );
 
+// Odoo - Delete Product
+$router->add(
+    '/odoo/delete-product/{id:[0-9]+}',
+    [
+        'controller' => 'odoo',
+        'action'     => 'deleteProduct',
+        'id'         => 1,
+    ]
+)->via(['POST', 'DELETE']); // Allow POST for easier HTML form use
+
+// Odoo - Delete Customer
+$router->add(
+    '/odoo/delete-customer/{id:[0-9]+}',
+    [
+        'controller' => 'odoo',
+        'action'     => 'deleteCustomer',
+        'id'         => 1,
+    ]
+)->via(['POST', 'DELETE']);
+
 // Odoo - Sales Orders
 $router->add(
     '/odoo/sales-orders',
@@ -102,6 +122,16 @@ $router->add(
         'action'     => 'salesOrders',
     ]
 );
+
+// Odoo - Delete Sales Order
+$router->add(
+    '/odoo/delete-sales-order/{id:[0-9]+}',
+    [
+        'controller' => 'odoo',
+        'action'     => 'deleteSalesOrder',
+        'id'         => 1,
+    ]
+)->via(['POST', 'DELETE']);
 
 // Odoo - Purchase Orders
 $router->add(
@@ -112,6 +142,16 @@ $router->add(
     ]
 );
 
+// Odoo - Delete Purchase Order
+$router->add(
+    '/odoo/delete-purchase-order/{id:[0-9]+}',
+    [
+        'controller' => 'odoo',
+        'action'     => 'deletePurchaseOrder',
+        'id'         => 1,
+    ]
+)->via(['POST', 'DELETE']);
+
 // Odoo - Invoices
 $router->add(
     '/odoo/invoices',
@@ -120,6 +160,16 @@ $router->add(
         'action'     => 'invoices',
     ]
 );
+
+// Odoo - Delete Invoice
+$router->add(
+    '/odoo/delete-invoice/{id:[0-9]+}',
+    [
+        'controller' => 'odoo',
+        'action'     => 'deleteInvoice',
+        'id'         => 1,
+    ]
+)->via(['POST', 'DELETE']);
 
 // Odoo - Inventory
 $router->add(
@@ -167,6 +217,15 @@ $router->add(
         'action'     => 'sync-wifi',
     ]
 )->via(['GET', 'POST']);
+
+// Odoo - Process Payment
+$router->add(
+    '/odoo/process-payment',
+    [
+        'controller' => 'odoo',
+        'action'     => 'processPayment',
+    ]
+)->via(['POST']);
 
 // Default route (fallback)
 $router->add(

@@ -328,4 +328,46 @@ class OdooService
     {
         return $this->call($model, 'search_count', [$domain]);
     }
+    
+    /**
+     * Execute a method on a specific record (wizard execution, etc)
+     * 
+     * @param string $model Model Odoo
+     * @param int $id Record ID
+     * @param string $method Method name to execute
+     * @param array $args Additional arguments
+     * @param array $kwargs Additional keyword arguments
+     * @return mixed Result dari method execution
+     */
+    public function execute($model, $id, $method, $args = [], $kwargs = [])
+    {
+        if (!$this->uid) {
+            $this->authenticate();
+        }
+
+        try {
+            $response = $this->client->post($this->url . '/web/dataset/call_kw', [
+                'json' => [
+                    'jsonrpc' => '2.0',
+                    'method' => 'call',
+                    'params' => [
+                        'model' => $model,
+                        'method' => $method,
+                        'args' => array_merge([[$id]], $args),
+                        'kwargs' => array_merge(['context' => []], $kwargs)
+                    ]
+                ]
+            ]);
+
+            $result = json_decode($response->getBody(), true);
+            
+            if (isset($result['error'])) {
+                throw new \Exception('Odoo error: ' . json_encode($result['error']));
+            }
+            
+            return $result['result'] ?? null;
+        } catch (\Exception $e) {
+            throw new \Exception('Odoo execute error: ' . $e->getMessage());
+        }
+    }
 }
