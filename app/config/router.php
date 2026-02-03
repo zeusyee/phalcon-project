@@ -76,6 +76,15 @@ $router->add(
     ]
 );
 
+// Odoo - Vendors
+$router->add(
+    '/odoo/vendors',
+    [
+        'controller' => 'odoo',
+        'action'     => 'vendors',
+    ]
+);
+
 // Odoo - Test Connection
 $router->add(
     '/odoo/test',
@@ -188,6 +197,25 @@ $router->add(
         'action'     => 'createCustomer',
     ]
 );
+
+// Odoo - Create Vendor (POST)
+$router->add(
+    '/odoo/create-vendor',
+    [
+        'controller' => 'odoo',
+        'action'     => 'createVendor',
+    ]
+)->via(['POST']);
+
+// Odoo - Delete Vendor
+$router->add(
+    '/odoo/delete-vendor/{id:[0-9]+}',
+    [
+        'controller' => 'odoo',
+        'action'     => 'deleteVendor',
+        'id'         => 1,
+    ]
+)->via(['POST', 'DELETE']);
 
 // Odoo - Update Customer
 $router->add(

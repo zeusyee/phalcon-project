@@ -28,11 +28,12 @@ class OdooController extends Controller
     public function customersAction()
     {
         try {
-            // Ambil data customers/partners dari Odoo (termasuk WiFi users)
+            // Ambil data customers/partners dari Odoo
+            // Filter: Customer Rank > 0 ATAU Supplier Rank = 0 (untuk menangkap contact lama/baru yang belum ada rank)
             $customers = $this->odooService->searchRead(
                 'res.partner',  // Model
-                [],  // No filter - ambil semua contacts
-                ['name', 'email', 'phone', 'ref', 'comment', 'city', 'country_id'],  // Fields without mobile
+                ['|', ['customer_rank', '>', 0], ['supplier_rank', '=', 0]],  // Filter inclusive
+                ['name', 'email', 'phone', 'ref', 'comment', 'city', 'country_id', 'customer_rank', 'supplier_rank'],
                 50  // Limit lebih besar
             );
 
@@ -45,6 +46,32 @@ class OdooController extends Controller
         
         // Explicitly set view path
         $this->view->pick('odoo/customers');
+    }
+
+    /**
+     * List vendors dari Odoo
+     */
+    public function vendorsAction()
+    {
+        try {
+            // Ambil data vendors/partners dari Odoo (Strict Vendor)
+            // Note: Jika vendor lama tidak muncul, pastikan supplier_rank > 0 di Odoo
+            $vendors = $this->odooService->searchRead(
+                'res.partner',  // Model
+                [['supplier_rank', '>', 0]],  // Filter vendor only
+                ['name', 'email', 'phone', 'ref', 'comment', 'city', 'country_id'],
+                50  // Limit lebih besar
+            );
+
+            $this->view->vendors = $vendors;
+            $this->view->error = null;
+        } catch (\Exception $e) {
+            $this->view->error = $e->getMessage();
+            $this->view->vendors = [];
+        }
+        
+        // Explicitly set view path
+        $this->view->pick('odoo/vendors');
     }
 
     /**
@@ -232,6 +259,8 @@ class OdooController extends Controller
                     'email' => $this->request->getPost('email'),
                     'phone' => $this->request->getPost('phone'),
                     'is_company' => (bool)$this->request->getPost('is_company', 'int', 0),
+                    'customer_rank' => 1, // Tandai sebagai customer
+                    'supplier_rank' => 0,
                 ];
 
                 // Optional fields
@@ -296,6 +325,55 @@ class OdooController extends Controller
     }
 
     /**
+     * Create vendor baru di Odoo
+     */
+    public function createVendorAction()
+    {
+        if ($this->request->isPost()) {
+            try {
+                $data = [
+                    'name' => $this->request->getPost('name'),
+                    'email' => $this->request->getPost('email'),
+                    'phone' => $this->request->getPost('phone'),
+                    'is_company' => (bool)$this->request->getPost('is_company', 'int', 0),
+                    'customer_rank' => 0,
+                    'supplier_rank' => 1, // Tandai sebagai vendor
+                ];
+
+                // Optional fields
+                if ($this->request->getPost('mobile')) {
+                    $data['mobile'] = $this->request->getPost('mobile');
+                }
+                if ($this->request->getPost('website')) {
+                    $data['website'] = $this->request->getPost('website');
+                }
+                if ($this->request->getPost('street')) {
+                    $data['street'] = $this->request->getPost('street');
+                }
+                if ($this->request->getPost('city')) {
+                    $data['city'] = $this->request->getPost('city');
+                }
+                if ($this->request->getPost('country_id')) {
+                    $data['country_id'] = (int)$this->request->getPost('country_id');
+                }
+
+                $vendorId = $this->odooService->create('res.partner', $data);
+
+                return $this->response->setJsonContent([
+                    'success' => true,
+                    'vendorId' => $vendorId,
+                    'message' => 'Vendor berhasil dibuat'
+                ]);
+            } catch (\Exception $e) {
+                return $this->response->setJsonContent([
+                    'success' => false,
+                    'message' => 'Error: ' . $e->getMessage()
+                ]);
+            }
+        }
+    }
+
+    /**
      * Update customer di Odoo
      */
     public function updateCustomerAction($id)
@@ -336,17 +414,57 @@ class OdooController extends Controller
     {
         if ($this->request->isPost() || $this->request->isDelete()) {
             try {
-                $success = $this->odooService->delete('res.partner', (int)$id);
+                $this->odooService->delete('res.partner', (int)$id);
 
                 return $this->response->setJsonContent([
-                    'success' => $success,
-                    'message' => $success ? 'Customer berhasil dihapus' : 'Gagal hapus customer'
+                    'success' => true,
+                    'message' => 'Customer berhasil dihapus'
                 ]);
             } catch (\Exception $e) {
+                // If delete fails, try to archive (soft delete)
+                try {
+                    $this->odooService->update('res.partner', (int)$id, ['active' => false]);
+                    return $this->response->setJsonContent([
+                        'success' => true,
+                        'message' => 'Customer berhasil diarsipkan (karena terhubung dengan data lain)'
+                    ]);
+                } catch (\Exception $e2) {
+                    return $this->response->setJsonContent([
+                        'success' => false,
+                        'message' => 'Gagal menghapus atau mengarsipkan: ' . $e->getMessage()
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Delete vendor di Odoo
+     */
+    public function deleteVendorAction($id)
+    {
+        if ($this->request->isPost() || $this->request->isDelete()) {
+            try {
+                $this->odooService->delete('res.partner', (int)$id);
+
                 return $this->response->setJsonContent([
-                    'success' => false,
-                    'message' => 'Error: ' . $e->getMessage()
+                    'success' => true,
+                    'message' => 'Vendor berhasil dihapus'
                 ]);
+            } catch (\Exception $e) {
+                // If delete fails, try to archive (soft delete)
+                try {
+                    $this->odooService->update('res.partner', (int)$id, ['active' => false]);
+                    return $this->response->setJsonContent([
+                        'success' => true,
+                        'message' => 'Vendor berhasil diarsipkan (karena terhubung dengan data lain)'
+                    ]);
+                } catch (\Exception $e2) {
+                    return $this->response->setJsonContent([
+                        'success' => false,
+                        'message' => 'Gagal menghapus atau mengarsipkan: ' . $e->getMessage()
+                    ]);
+                }
             }
         }
     }
@@ -434,10 +552,10 @@ class OdooController extends Controller
                 20
             );
 
-            // Fetch customers for dropdown (all partners that are not companies or have is_company=true)
+            // Fetch customers for dropdown (hanya customer atau neutral)
             $customers = $this->odooService->searchRead(
                 'res.partner',
-                [['name', '!=', false]],
+                ['|', ['customer_rank', '>', 0], ['supplier_rank', '=', 0]],
                 ['id', 'name'],
                 100
             );
@@ -622,7 +740,7 @@ class OdooController extends Controller
             // Fetch vendors (suppliers) for dropdown
             $vendors = $this->odooService->searchRead(
                 'res.partner',
-                [['name', '!=', false]],
+                [['supplier_rank', '>', 0]],
                 ['id', 'name'],
                 100
             );
@@ -793,10 +911,10 @@ class OdooController extends Controller
                 20
             );
 
-            // Fetch customers for dropdown
+            // Fetch customers for dropdown (hanya customer atau neutral)
             $customers = $this->odooService->searchRead(
                 'res.partner',
-                [['name', '!=', false]],
+                ['|', ['customer_rank', '>', 0], ['supplier_rank', '=', 0]],
                 ['id', 'name'],
                 100
             );

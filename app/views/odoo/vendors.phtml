@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odoo - Vendors</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin: 10px 0;
+        }
+        
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: separate;
+            border-spacing: 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 16px 18px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        tr:nth-child(even) td {
+            background: #f8f9fa;
+        }
+        tr:hover td {
+            background: #e9ecef;
+        }
+        
+        .badge {
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            margin-right: 10px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input, 
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #4f46e5;
+            font-weight: 600;
+            font-size: 15px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.07);
+            border: 1.5px solid #c7d2fe;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+        .btn-back:hover {
+            background: linear-gradient(90deg, #c7d2fe 0%, #e0e7ff 100%);
+            color: #3730a3;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.13);
+            text-decoration: none;
+        }
+        .btn-back .icon {
+            font-size: 18px;
+            margin-right: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 18px;">
+                <a href="/odoo" class="btn-back">
+                    <span class="icon">&#8592;</span> Kembali
+                </a>
+                <h1>🏭 Vendors dari Odoo</h1>
+            </div>
+            <button class="btn btn-primary" onclick="showCreateModal()">+ Tambah Vendor</button>
+        </div>
+        
+        <div class="content">
+            <div id="alertSuccess" class="alert-success" style="display:none;"></div>
+            
+            <?php if (isset($error)): ?>
+                <div class="alert-error">
+                    <strong>Error:</strong> <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (isset($vendors) && count($vendors) > 0): ?>
+                <h2>📋 Daftar Vendors (Top 50)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Reference</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>City</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($vendors as $vendor): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($vendor['id']); ?></td>
+                            <td>
+                                <?php echo htmlspecialchars($vendor['name']); ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($vendor['ref'] ?? '-'); ?></td>
+                            <td><?php echo htmlspecialchars($vendor['email'] ?? '-'); ?></td>
+                            <td><?php echo htmlspecialchars($vendor['phone'] ?? $vendor['mobile'] ?? '-'); ?></td>
+                            <td><?php echo htmlspecialchars($vendor['city'] ?? '-'); ?></td>
+                            <td>
+                                <button class="btn btn-danger" style="margin-top: 0; padding: 5px 10px; font-size: 12px;" onclick="deleteVendor(<?php echo $vendor['id']; ?>)">Delete</button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <div class="alert-error">
+                    Tidak ada data vendor. Silakan buat vendor baru di Odoo atau gunakan tombol Tambah Vendor.
+                </div>
+            <?php endif; ?>
+            
+            <a href="/odoo" class="btn">← Kembali ke Dashboard</a>
+            <a href="http://localhost:8069" target="_blank" class="btn">Buka Odoo Web →</a>
+        </div>
+    </div>
+
+    <!-- Modal Create Vendor -->
+    <div id="vendorModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Tambah Vendor</h2>
+            <form id="vendorForm">
+                <div class="form-group">
+                    <label for="name">Nama Vendor *</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="text" id="phone" name="phone">
+                </div>
+                
+                <div class="form-group">
+                    <label for="street">Alamat</label>
+                    <input type="text" id="street" name="street">
+                </div>
+                
+                <div class="form-group">
+                    <label for="city">Kota</label>
+                    <input type="text" id="city" name="city">
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_company" value="1"> Ini adalah Perusahaan
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-success">Simpan Vendor</button>
+                <button type="button" class="btn btn-danger" onclick="closeModal()">Batal</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('vendorModal');
+        const alertDiv = document.getElementById('alertSuccess');
+        
+        function showCreateModal() {
+            modal.style.display = 'block';
+            document.getElementById('modalTitle').textContent = 'Tambah Vendor';
+            document.getElementById('vendorForm').reset();
+        }
+        
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        document.getElementById('vendorForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const url = '/odoo/create-vendor';
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    closeModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        });
+
+        function deleteVendor(id) {
+            if (!confirm('Yakin ingin menghapus vendor ini?')) return;
+            
+            fetch(`/odoo/delete-vendor/${id}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            })
+            .catch(error => {
+                showAlert('Error: ' + error.message, 'error');
+            });
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.textContent = message;
+            alertDiv.style.cssText = 'padding: 15px; border-radius: 8px; margin-bottom: 20px; display: block;';
+            if (type === 'success') {
+                alertDiv.style.background = '#d4edda';
+                alertDiv.style.color = '#155724';
+            } else {
+                alertDiv.style.background = '#f8d7da';
+                alertDiv.style.color = '#721c24';
+            }
+            
+            const container = document.querySelector('.content');
+            container.insertBefore(alertDiv, container.children[1]); // Insert after title/error
+            
+            setTimeout(() => alertDiv.remove(), 5000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

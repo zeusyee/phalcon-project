@@ -240,6 +240,12 @@ class OdooService
 
             $result = json_decode($response->getBody(), true);
             
+            // Periksa apakah ada error dari Odoo (misal: referential integrity)
+            if (isset($result['error'])) {
+                $errorMsg = $result['error']['data']['message'] ?? $result['error']['message'] ?? 'Unknown Odoo error';
+                throw new \Exception($errorMsg);
+            }
+
             return isset($result['result']) && $result['result'] === true;
         } catch (\Exception $e) {
             throw new \Exception('Odoo delete error: ' . $e->getMessage());
