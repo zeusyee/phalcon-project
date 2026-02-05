@@ -634,10 +634,17 @@ class OdooController extends Controller
 
                 $orderId = $this->odooService->create('sale.order', $data);
 
+                // AUTO-CREATE INVOICE
+                $autoInv = $this->_createInvoiceFromOrder($orderId, 'sale');
+                $invMsg = 'Draft Invoice otomatis dibuat!';
+                if (!$autoInv['success']) {
+                    $invMsg = 'Gagal buat invoice otomatis: ' . $autoInv['message'];
+                }
+
                 return $this->response->setJsonContent([
                     'success' => true,
                     'orderId' => $orderId,
-                    'message' => 'Sales Order berhasil dibuat'
+                    'message' => 'Sales Order berhasil dibuat. ' . $invMsg
                 ]);
             } catch (\Exception $e) {
                 return $this->response->setJsonContent([
@@ -806,10 +813,17 @@ class OdooController extends Controller
 
                 $orderId = $this->odooService->create('purchase.order', $data);
 
+                // AUTO-CREATE BILL (INVOICE)
+                $autoInv = $this->_createInvoiceFromOrder($orderId, 'purchase');
+                $invMsg = 'Draft Bill otomatis dibuat!';
+                if (!$autoInv['success']) {
+                    $invMsg = 'Gagal buat bill otomatis: ' . $autoInv['message'];
+                }
+
                 return $this->response->setJsonContent([
                     'success' => true,
                     'orderId' => $orderId,
-                    'message' => 'Purchase Order berhasil dibuat'
+                    'message' => 'Purchase Order berhasil dibuat. ' . $invMsg
                 ]);
             } catch (\Exception $e) {
                 return $this->response->setJsonContent([
@@ -901,7 +915,8 @@ class OdooController extends Controller
     public function invoicesAction()
     {
         try {
-            $invoices = $this->odooService->searchRead(
+            // Fetch Customer Invoices (Sales Order)
+            $customerInvoices = $this->odooService->searchRead(
                 'account.move',
                 [
                     ['move_type', '=', 'out_invoice'],
@@ -911,12 +926,24 @@ class OdooController extends Controller
                 20
             );
 
-            // Fetch customers for dropdown (hanya customer atau neutral)
-            $customers = $this->odooService->searchRead(
+            // Fetch Vendor Bills (Purchase Order)
+            $vendorBills = $this->odooService->searchRead(
+                'account.move',
+                [
+                    ['move_type', '=', 'in_invoice'],
+                    ['state', '!=', 'cancel']
+                ],
+                ['name', 'partner_id', 'invoice_date', 'amount_total', 'payment_state', 'state'],
+                20
+            );
+
+            // Fetch partners (Customers & Vendors) for dropdown
+            // Remove rank filter to include ALL partners (including new ones with rank=0)
+            $partners = $this->odooService->searchRead(
                 'res.partner',
-                ['|', ['customer_rank', '>', 0], ['supplier_rank', '=', 0]],
-                ['id', 'name'],
-                100
+                [], // Empty filter to get everything
+                ['id', 'name', 'customer_rank', 'supplier_rank'],
+                1000 // Increased limit
             );
 
             // Fetch products for dropdown
@@ -927,14 +954,135 @@ class OdooController extends Controller
                 100
             );
 
-            $this->view->invoices = $invoices;
-            $this->view->customers = $customers;
+            // Fetch Sales Orders (Active / Non-Cancelled)
+            $salesOrders = $this->odooService->searchRead(
+                'sale.order',
+                [['state', '!=', 'cancel']], 
+                ['id', 'name', 'partner_id', 'amount_total', 'state'],
+                50
+            );
+
+            // Fetch Purchase Orders (Active / Non-Cancelled)
+            $purchaseOrders = $this->odooService->searchRead(
+                'purchase.order',
+                [['state', '!=', 'cancel']],
+                ['id', 'name', 'partner_id', 'amount_total', 'state'],
+                50
+            );
+
+            $this->view->invoices = $customerInvoices; // Backward compatibility (if needed)
+            $this->view->customerInvoices = $customerInvoices;
+            $this->view->vendorBills = $vendorBills;
+            $this->view->customers = $partners; // Send mixed partners as 'customers' for now
             $this->view->products = $products;
+            $this->view->salesOrders = $salesOrders;
+            $this->view->purchaseOrders = $purchaseOrders;
         } catch (\Exception $e) {
             $this->view->error = $e->getMessage();
             $this->view->invoices = [];
             $this->view->customers = [];
             $this->view->products = [];
+            $this->view->salesOrders = [];
+            $this->view->purchaseOrders = [];
+        }
+    }
+
+    /**
+     * Get order details (lines and partner) for invoice creation
+     */
+    public function getOrderDetailsAction()
+    {
+        $this->view->disable();
+        if (!$this->request->isGet()) {
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            return;
+        }
+
+        try {
+            $type = $this->request->getQuery('type', 'string'); // 'sale' or 'purchase'
+            $id = (int)$this->request->getQuery('id', 'int');
+
+            if (!$type || !$id) {
+                throw new \Exception('Invalid parameters');
+            }
+
+            $lines = [];
+            $partnerId = 0;
+
+            if ($type === 'sale') {
+                // Get SO details
+                $order = $this->odooService->searchRead(
+                    'sale.order',
+                    [['id', '=', $id]],
+                    ['partner_id', 'order_line'],
+                    1
+                );
+
+                if (empty($order)) throw new \Exception('Sales Order not found');
+                
+                $partnerId = is_array($order[0]['partner_id']) ? $order[0]['partner_id'][0] : $order[0]['partner_id'];
+                
+                // Get Lines
+                $orderLines = $this->odooService->searchRead(
+                    'sale.order.line',
+                    [['order_id', '=', $id]],
+                    ['product_id', 'product_uom_qty', 'price_unit', 'name']
+                );
+
+                foreach ($orderLines as $line) {
+                    $productId = is_array($line['product_id']) ? $line['product_id'][0] : $line['product_id'];
+                    $lines[] = [
+                        'product_id' => $productId,
+                        'param_qty' => $line['product_uom_qty'], // naming match for frontend
+                        'price_unit' => $line['price_unit'],
+                        'name' => $line['name']
+                    ];
+                }
+
+            } elseif ($type === 'purchase') {
+                // Get PO details
+                $order = $this->odooService->searchRead(
+                    'purchase.order',
+                    [['id', '=', $id]],
+                    ['partner_id', 'order_line'],
+                    1
+                );
+
+                if (empty($order)) throw new \Exception('Purchase Order not found');
+
+                $partnerId = is_array($order[0]['partner_id']) ? $order[0]['partner_id'][0] : $order[0]['partner_id'];
+
+                // Get Lines
+                $orderLines = $this->odooService->searchRead(
+                    'purchase.order.line',
+                    [['order_id', '=', $id]],
+                    ['product_id', 'product_qty', 'price_unit', 'name']
+                );
+
+                foreach ($orderLines as $line) {
+                    $productId = is_array($line['product_id']) ? $line['product_id'][0] : $line['product_id'];
+                    $lines[] = [
+                        'product_id' => $productId,
+                        'param_qty' => $line['product_qty'],
+                        'price_unit' => $line['price_unit'],
+                        'name' => $line['name']
+                    ];
+                }
+            } else {
+                throw new \Exception('Invalid type');
+            }
+
+            echo json_encode([
+                'success' => true,
+                'partner_id' => $partnerId,
+                'lines' => $lines
+            ]);
+
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -945,9 +1093,40 @@ class OdooController extends Controller
     {
         if ($this->request->isPost()) {
             try {
+                $sourceType = $this->request->getPost('source_type');
+                
+                // Determine Invoice Type: 'out_invoice' (Customer) or 'in_invoice' (Vendor)
+                // If Purchase Order -> Vendor Bill (in_invoice)
+                // If Sales Order or Manual -> Customer Invoice (out_invoice)
+                $moveType = ($sourceType === 'purchase') ? 'in_invoice' : 'out_invoice';
+
+                // 1. Get Appropriate Journal (CRITICAL for correct behavior)
+                // Odoo needs to know which Journal to use to set defaults correctly
+                $journalType = ($moveType === 'in_invoice') ? 'purchase' : 'sale';
+                $journals = $this->odooService->searchRead(
+                    'account.journal',
+                    [['type', '=', $journalType]],
+                    ['id', 'default_account_id'],
+                    1
+                );
+                
+                if (empty($journals)) {
+                    throw new \Exception("No Journal found for type '$journalType'. Please check Odoo Accounting configuration.");
+                }
+
+                $journalId = $journals[0]['id'];
+                $journalDefaultAccount = null;
+                if (isset($journals[0]['default_account_id']) && !empty($journals[0]['default_account_id'])) {
+                    $journalDefaultAccount = is_array($journals[0]['default_account_id']) 
+                        ? $journals[0]['default_account_id'][0] 
+                        : $journals[0]['default_account_id'];
+                }
+
                 $data = [
+                    'journal_id' => $journalId,
                     'partner_id' => (int)$this->request->getPost('partner_id'),
-                    'move_type' => 'out_invoice',
+                    'move_type' => $moveType,
+                    'invoice_date' => date('Y-m-d'), // Good practice to set date
                 ];
 
                 // Optional payment reference
@@ -958,31 +1137,129 @@ class OdooController extends Controller
                 // Prepare invoice lines
                 $productIds = $this->request->getPost('product_ids');
                 $quantities = $this->request->getPost('quantities');
+                $prices = $this->request->getPost('prices'); // New field
+
                 $invoiceLines = [];
                 if (!empty($productIds) && is_array($productIds)) {
                     foreach ($productIds as $index => $productId) {
                         if (!empty($productId)) {
                             $qty = isset($quantities[$index]) ? (float)$quantities[$index] : 1;
+                            $price = isset($prices[$index]) ? (float)$prices[$index] : 0;
+                            
+                            // Fetch product data for account details
+                            $fieldsToFetch = ['name', 'categ_id'];
+                            // If user didn't provide price, we need standard_price (cost) or list_price (sales)
+                            if ($price <= 0) {
+                                $fieldsToFetch[] = ($moveType === 'in_invoice') ? 'standard_price' : 'list_price';
+                            }
+                            
+                            // Fetch appropriate account
+                            if ($moveType === 'in_invoice') {
+                                $fieldsToFetch[] = 'property_account_expense_id';
+                                $fieldsToFetch[] = 'categ_id'; // Fallback to category
+                            } else {
+                                $fieldsToFetch[] = 'property_account_income_id';
+                                $fieldsToFetch[] = 'categ_id';
+                            }
+
                             $products = $this->odooService->searchRead(
                                 'product.product',
                                 [['id', '=', (int)$productId]],
-                                ['name', 'list_price', 'property_account_income_id'],
+                                $fieldsToFetch,
                                 1
                             );
+
                             if (!empty($products)) {
                                 $product = $products[0];
+                                
+                                // Determine Price if not provided
+                                if ($price <= 0) {
+                                    if ($moveType === 'in_invoice') {
+                                        $price = $product['standard_price'] ?? 0;
+                                    } else {
+                                        $price = $product['list_price'] ?? 0;
+                                    }
+                                }
+                                
+                                // Ensure price is reasonable (max 1 trillion)
+                                if ($price > 1000000000000) {
+                                    $price = 0; // Reset to let Odoo use product default
+                                }
+
+                                // Build invoice line
                                 $line = [
                                     'product_id' => (int)$productId,
                                     'quantity' => $qty,
-                                    'price_unit' => $product['list_price'] ?? 0,
                                     'name' => $product['name'] ?? 'Item',
                                 ];
-                                if (isset($product['property_account_income_id']) && !empty($product['property_account_income_id'])) {
-                                    $accountId = is_array($product['property_account_income_id'])
-                                        ? $product['property_account_income_id'][0]
-                                        : $product['property_account_income_id'];
+                                
+                                // Only set price_unit if we have a valid price
+                                if ($price > 0) {
+                                    $line['price_unit'] = $price;
+                                }
+
+                                // Account Logic - Find account_id BEFORE adding to array
+                                $accountId = null;
+                                // 1. Check Product level account
+                                if ($moveType === 'in_invoice') {
+                                    if (isset($product['property_account_expense_id']) && !empty($product['property_account_expense_id'])) {
+                                        $accountId = is_array($product['property_account_expense_id']) 
+                                            ? $product['property_account_expense_id'][0] 
+                                            : $product['property_account_expense_id'];
+                                    }
+                                } else {
+                                    if (isset($product['property_account_income_id']) && !empty($product['property_account_income_id'])) {
+                                        $accountId = is_array($product['property_account_income_id'])
+                                            ? $product['property_account_income_id'][0]
+                                            : $product['property_account_income_id'];
+                                    }
+                                }
+
+                                // 2. If not found, check Category level account (Standard Odoo behavior)
+                                if (!$accountId && isset($product['categ_id']) && !empty($product['categ_id'])) {
+                                    $categId = is_array($product['categ_id']) ? $product['categ_id'][0] : $product['categ_id'];
+                                    
+                                    // Fetch Category
+                                    $categField = ($moveType === 'in_invoice') ? 'property_account_expense_categ_id' : 'property_account_income_categ_id';
+                                    $category = $this->odooService->searchRead(
+                                        'product.category',
+                                        [['id', '=', (int)$categId]],
+                                        [$categField],
+                                        1
+                                    );
+
+                                    if (!empty($category) && isset($category[0][$categField]) && !empty($category[0][$categField])) {
+                                        $acc = $category[0][$categField];
+                                        $accountId = is_array($acc) ? $acc[0] : $acc;
+                                    }
+                                }
+                                
+                                // 3. FALLBACK: Search by account_type (works better in Odoo 17+)
+                                if (!$accountId) {
+                                    // Use account_type instead of code prefix
+                                    $accountType = ($moveType === 'in_invoice') ? 'expense' : 'income';
+                                    $fallbackAccounts = $this->odooService->searchRead(
+                                        'account.account',
+                                        [['account_type', '=', $accountType]],
+                                        ['id'],
+                                        1
+                                    );
+                                    if (!empty($fallbackAccounts)) {
+                                        $accountId = $fallbackAccounts[0]['id'];
+                                    }
+                                }
+
+                                // 4. Last resort: Use journal's default account
+                                if (!$accountId && $journalDefaultAccount) {
+                                    $accountId = $journalDefaultAccount;
+                                }
+
+                                // Set account_id - REQUIRED for balanced entry
+                                if ($accountId) {
                                     $line['account_id'] = (int)$accountId;
                                 }
+
+                                // NOW add the complete line to array
                                 $invoiceLines[] = [0, 0, $line];
                             }
                         }
@@ -992,17 +1269,26 @@ class OdooController extends Controller
                     $data['invoice_line_ids'] = $invoiceLines;
                 }
 
+                // DEBUG: Log what we're sending to Odoo
+                error_log('=== INVOICE CREATE DEBUG ===');
+                error_log('Data being sent: ' . json_encode($data, JSON_PRETTY_PRINT));
+
                 $invoiceId = $this->odooService->create('account.move', $data);
 
                 return $this->response->setJsonContent([
                     'success' => true,
                     'invoiceId' => $invoiceId,
-                    'message' => 'Invoice berhasil dibuat'
+                    'message' => ($moveType === 'in_invoice' ? 'Vendor Bill' : 'Customer Invoice') . ' berhasil dibuat'
                 ]);
             } catch (\Exception $e) {
+                // Log detailed error for debugging
+                error_log('Invoice Creation Error: ' . $e->getMessage());
+                error_log('Data attempted: ' . json_encode($data ?? [], JSON_PRETTY_PRINT));
+                
                 return $this->response->setJsonContent([
                     'success' => false,
-                    'message' => 'Error: ' . $e->getMessage()
+                    'message' => 'Odoo create error: ' . $e->getMessage(),
+                    'debug' => isset($data) ? $data : null
                 ]);
             }
         }
@@ -1254,5 +1540,153 @@ class OdooController extends Controller
         }
 
         return is_array($invoice[0]['partner_id']) ? $invoice[0]['partner_id'][0] : $invoice[0]['partner_id'];
+    }
+
+    /**
+     * Helper to auto-create invoice from SO/PO
+     */
+    private function _createInvoiceFromOrder($orderId, $sourceType)
+    {
+        try {
+            // 1. Determine Models
+            if ($sourceType === 'sale') {
+                $orderModel = 'sale.order';
+                $lineModel = 'sale.order.line';
+                $moveType = 'out_invoice';
+                $qtyField = 'product_uom_qty';
+                $journalType = 'sale';
+            } else {
+                $orderModel = 'purchase.order';
+                $lineModel = 'purchase.order.line';
+                $moveType = 'in_invoice';
+                $qtyField = 'product_qty'; // Note: different field name for PO
+                $journalType = 'purchase';
+            }
+
+            // 2. Fetch Order Data
+            $orders = $this->odooService->searchRead(
+                $orderModel,
+                [['id', '=', (int)$orderId]],
+                ['name', 'partner_id', 'order_line'],
+                1
+            );
+
+            if (empty($orders)) return ['success' => false, 'message' => 'Order not found'];
+            $order = $orders[0];
+
+            // 3. Fetch Order Lines
+            $lineIds = $order['order_line'];
+            if (empty($lineIds)) return ['success' => false, 'message' => 'Order has no lines'];
+
+            $lines = $this->odooService->searchRead(
+                $lineModel,
+                [['id', 'in', $lineIds]],
+                ['product_id', 'name', 'price_unit', $qtyField]
+            );
+
+            // 4. Get Journal
+            $journals = $this->odooService->searchRead(
+                'account.journal',
+                [['type', '=', $journalType]],
+                ['id', 'default_account_id'],
+                1
+            );
+            
+            if (empty($journals)) throw new \Exception("Journal $journalType not found");
+            
+            $journalId = $journals[0]['id'];
+            $journalDefaultAccount = isset($journals[0]['default_account_id']) && $journals[0]['default_account_id'] 
+                ? (is_array($journals[0]['default_account_id']) ? $journals[0]['default_account_id'][0] : $journals[0]['default_account_id'])
+                : null;
+
+            // 5. Build Invoice Data
+            $invoiceData = [
+                'move_type' => $moveType,
+                'partner_id' => is_array($order['partner_id']) ? $order['partner_id'][0] : $order['partner_id'],
+                'invoice_date' => date('Y-m-d'),
+                'journal_id' => $journalId,
+                'invoice_origin' => $order['name'], // Link to SO/PO
+            ];
+
+            // 6. Build Invoice Lines (Finding Accounts)
+            $invoiceLines = [];
+            foreach ($lines as $line) {
+                // Get Product ID
+                $prodId = is_array($line['product_id']) ? $line['product_id'][0] : $line['product_id'];
+                
+                // Fetch Product for Accounts
+                $fieldsToFetch = ['name', 'categ_id'];
+                if ($moveType === 'in_invoice') {
+                    $fieldsToFetch[] = 'property_account_expense_id';
+                } else {
+                    $fieldsToFetch[] = 'property_account_income_id';
+                }
+                
+                $products = $this->odooService->searchRead('product.product', [['id', '=', $prodId]], $fieldsToFetch, 1);
+                if (empty($products)) continue;
+                $product = $products[0];
+
+                // === Logic Pencarian Account (Copy dari createInvoiceAction) ===
+                $accountId = null;
+                // A. Product
+                if ($moveType === 'in_invoice' && !empty($product['property_account_expense_id'])) {
+                    $accountId = is_array($product['property_account_expense_id']) ? $product['property_account_expense_id'][0] : $product['property_account_expense_id'];
+                } elseif ($moveType !== 'in_invoice' && !empty($product['property_account_income_id'])) {
+                    $accountId = is_array($product['property_account_income_id']) ? $product['property_account_income_id'][0] : $product['property_account_income_id'];
+                }
+
+                // B. Category
+                if (!$accountId && !empty($product['categ_id'])) {
+                     $categId = is_array($product['categ_id']) ? $product['categ_id'][0] : $product['categ_id'];
+                     $categField = ($moveType === 'in_invoice') ? 'property_account_expense_categ_id' : 'property_account_income_categ_id';
+                     $cats = $this->odooService->searchRead('product.category', [['id', '=', $categId]], [$categField], 1);
+                     if (!empty($cats) && !empty($cats[0][$categField])) {
+                         $ac = $cats[0][$categField];
+                         $accountId = is_array($ac) ? $ac[0] : $ac;
+                     }
+                }
+
+                // C. Account Type
+                if (!$accountId) {
+                    $accType = ($moveType === 'in_invoice') ? 'expense' : 'income';
+                    $accs = $this->odooService->searchRead('account.account', [['account_type', '=', $accType]], ['id'], 1);
+                    if (!empty($accs)) $accountId = $accs[0]['id'];
+                }
+
+                // D. Journal Default
+                if (!$accountId && $journalDefaultAccount) {
+                    $accountId = $journalDefaultAccount;
+                }
+
+                if (!$accountId) throw new \Exception("No account found for product " . $product['name']);
+
+                // Prepare Line
+                $invLine = [
+                    'product_id' => $prodId,
+                    'quantity' => $line[$qtyField],
+                    'price_unit' => $line['price_unit'],
+                    'name' => $line['name'], // Description from order
+                    'account_id' => $accountId
+                ];
+
+                $invoiceLines[] = [0, 0, $invLine];
+            }
+
+            if (!empty($invoiceLines)) {
+                $invoiceData['invoice_line_ids'] = $invoiceLines;
+                
+                // Debug log
+                error_log("Auto Invoice Data: " . json_encode($invoiceData));
+                
+                $invoiceId = $this->odooService->create('account.move', $invoiceData);
+                return ['success' => true, 'id' => $invoiceId];
+            }
+            
+            return ['success' => false, 'message' => 'No lines generated'];
+
+        } catch (\Exception $e) {
+            error_log("Auto Invoice Failed: " . $e->getMessage());
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 }

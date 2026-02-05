@@ -416,76 +416,220 @@
             </div>
         <?php endif; ?>
         
-        <?php if (isset($invoices) && count($invoices) > 0): ?>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Invoice #</th>
-                        <th>Customer</th>
-                        <th>Tanggal</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th>Pembayaran</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($invoices as $invoice): ?>
-                    <tr>
-                        <td><strong><?php echo htmlspecialchars($invoice['name'] ?? '-'); ?></strong></td>
-                        <td>
-                            <?php 
-                            if (isset($invoice['partner_id']) && is_array($invoice['partner_id'])) {
-                                echo htmlspecialchars($invoice['partner_id'][1]);
-                            } else {
-                                echo '-';
-                            }
-                            ?>
-                        </td>
-                        <td><?php echo htmlspecialchars($invoice['invoice_date'] ?? '-'); ?></td>
-                        <td><strong>Rp <?php echo number_format($invoice['amount_total'] ?? 0, 0, ',', '.'); ?></strong></td>
-                        <td>
-                            <?php 
-                            $state = $invoice['state'] ?? 'draft';
-                            $stateBadges = [
-                                'draft' => ['class' => 'badge-draft', 'label' => 'DRAFT'],
-                                'posted' => ['class' => 'badge-posted', 'label' => 'POSTED']
-                            ];
-                            $badge = $stateBadges[$state] ?? $stateBadges['draft'];
-                            ?>
-                            <span class="badge <?php echo $badge['class']; ?>"><?php echo $badge['label']; ?></span>
-                        </td>
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 8px;">
+        <style>
+            /* Simple Tab Styles */
+            .tabs {
+                display: flex;
+                margin-bottom: 20px;
+                border-bottom: 2px solid #e2e8f0;
+            }
+            .tab-btn {
+                padding: 12px 24px;
+                border: none;
+                background: none;
+                cursor: pointer;
+                font-size: 16px;
+                font-weight: 600;
+                color: #64748b;
+                border-bottom: 2px solid transparent;
+                margin-bottom: -2px;
+                transition: all 0.2s;
+            }
+            .tab-btn:hover {
+                color: #3b82f6;
+            }
+            .tab-btn.active {
+                color: #2563eb;
+                border-bottom: 2px solid #2563eb;
+            }
+            .tab-content {
+                display: none;
+            }
+            .tab-content.active {
+                display: block;
+                animation: fadeIn 0.3s;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(5px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        </style>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab('customer-invoices')">🛒 Invoice Sales Order (Customer)</button>
+            <button class="tab-btn" onclick="openTab('vendor-bills')">🏢 Invoice Vendor Bill (Supplier)</button>
+        </div>
+        
+        <!-- Customer Invoices Tab -->
+        <div id="customer-invoices" class="tab-content active">
+            <?php if (isset($customerInvoices) && count($customerInvoices) > 0): ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Customer</th>
+                            <th>Tanggal</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Pembayaran</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($customerInvoices as $invoice): ?>
+                        <tr>
+                            <td><strong><?php echo htmlspecialchars($invoice['name'] ?? '-'); ?></strong></td>
+                            <td>
                                 <?php 
-                                $paymentState = $invoice['payment_state'] ?? 'not_paid';
-                                $paymentBadges = [
-                                    'paid' => ['class' => 'badge-paid', 'label' => 'LUNAS'],
-                                    'partial' => ['class' => 'badge-partial', 'label' => 'PARTIAL'],
-                                    'not_paid' => ['class' => 'badge-not_paid', 'label' => 'BELUM BAYAR']
-                                ];
-                                $payBadge = $paymentBadges[$paymentState] ?? $paymentBadges['not_paid'];
+                                if (isset($invoice['partner_id']) && is_array($invoice['partner_id'])) {
+                                    echo htmlspecialchars($invoice['partner_id'][1]);
+                                } else {
+                                    echo '-';
+                                }
                                 ?>
-                                <span class="badge <?php echo $payBadge['class']; ?>"><?php echo $payBadge['label']; ?></span>
-                                <?php if ($paymentState !== 'paid'): ?>
-                                    <button class="btn-pay" onclick="showPaymentModal('<?php echo $invoice['id']; ?>', '<?php echo htmlspecialchars($invoice['name']); ?>', '<?php echo $invoice['amount_total'] ?? 0; ?>')">
-                                        💳 Bayar
-                                    </button>
-                                <?php endif; ?>
-                            </div>
-                        </td>
-                        <td>
-                             <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px; margin: 0;" onclick="deleteInvoice(<?php echo $invoice['id']; ?>)">Delete</button>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <div class="alert-error">
-                Tidak ada data invoice.
-            </div>
-        <?php endif; ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($invoice['invoice_date'] ?? '-'); ?></td>
+                            <td><strong>Rp <?php echo number_format($invoice['amount_total'] ?? 0, 0, ',', '.'); ?></strong></td>
+                            <td>
+                                <?php 
+                                $state = $invoice['state'] ?? 'draft';
+                                $stateBadges = [
+                                    'draft' => ['class' => 'badge-draft', 'label' => 'DRAFT'],
+                                    'posted' => ['class' => 'badge-posted', 'label' => 'POSTED']
+                                ];
+                                $badge = $stateBadges[$state] ?? $stateBadges['draft'];
+                                ?>
+                                <span class="badge <?php echo $badge['class']; ?>"><?php echo $badge['label']; ?></span>
+                            </td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <?php 
+                                    $paymentState = $invoice['payment_state'] ?? 'not_paid';
+                                    $paymentBadges = [
+                                        'paid' => ['class' => 'badge-paid', 'label' => 'LUNAS'],
+                                        'partial' => ['class' => 'badge-partial', 'label' => 'PARTIAL'],
+                                        'not_paid' => ['class' => 'badge-not_paid', 'label' => 'BELUM BAYAR']
+                                    ];
+                                    $payBadge = $paymentBadges[$paymentState] ?? $paymentBadges['not_paid'];
+                                    ?>
+                                    <span class="badge <?php echo $payBadge['class']; ?>"><?php echo $payBadge['label']; ?></span>
+                                    <?php if ($paymentState !== 'paid'): ?>
+                                        <button class="btn-pay" onclick="showPaymentModal('<?php echo $invoice['id']; ?>', '<?php echo htmlspecialchars($invoice['name']); ?>', '<?php echo $invoice['amount_total'] ?? 0; ?>')">
+                                            💳 Bayar
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <td>
+                                 <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px; margin: 0;" onclick="deleteInvoice(<?php echo $invoice['id']; ?>)">Delete</button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <div class="alert-error" style="background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1;">
+                    Belum ada Customer Sales Invoice.
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Vendor Bills Tab -->
+        <div id="vendor-bills" class="tab-content">
+            <?php if (isset($vendorBills) && count($vendorBills) > 0): ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bill #</th>
+                            <th>Vendor</th>
+                            <th>Tanggal</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Pembayaran</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($vendorBills as $bill): ?>
+                        <tr>
+                            <td><strong><?php echo htmlspecialchars($bill['name'] ?? '-'); ?></strong></td>
+                            <td>
+                                <?php 
+                                if (isset($bill['partner_id']) && is_array($bill['partner_id'])) {
+                                    echo htmlspecialchars($bill['partner_id'][1]);
+                                } else {
+                                    echo '-';
+                                }
+                                ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($bill['invoice_date'] ?? '-'); ?></td>
+                            <td><strong>Rp <?php echo number_format($bill['amount_total'] ?? 0, 0, ',', '.'); ?></strong></td>
+                            <td>
+                                <?php 
+                                $state = $bill['state'] ?? 'draft';
+                                $stateBadges = [
+                                    'draft' => ['class' => 'badge-draft', 'label' => 'DRAFT'],
+                                    'posted' => ['class' => 'badge-posted', 'label' => 'POSTED']
+                                ];
+                                $badge = $stateBadges[$state] ?? $stateBadges['draft'];
+                                ?>
+                                <span class="badge <?php echo $badge['class']; ?>"><?php echo $badge['label']; ?></span>
+                            </td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <?php 
+                                    $paymentState = $bill['payment_state'] ?? 'not_paid';
+                                    $paymentBadges = [
+                                        'paid' => ['class' => 'badge-paid', 'label' => 'LUNAS'],
+                                        'partial' => ['class' => 'badge-partial', 'label' => 'PARTIAL'],
+                                        'not_paid' => ['class' => 'badge-not_paid', 'label' => 'BELUM BAYAR']
+                                    ];
+                                    $payBadge = $paymentBadges[$paymentState] ?? $paymentBadges['not_paid'];
+                                    ?>
+                                    <span class="badge <?php echo $payBadge['class']; ?>"><?php echo $payBadge['label']; ?></span>
+                                    <?php if ($paymentState !== 'paid'): ?>
+                                        <button class="btn-pay" onclick="showPaymentModal('<?php echo $bill['id']; ?>', '<?php echo htmlspecialchars($bill['name']); ?>', '<?php echo $bill['amount_total'] ?? 0; ?>')">
+                                            💳 Bayar Bill
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <td>
+                                 <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px; margin: 0;" onclick="deleteInvoice(<?php echo $bill['id']; ?>)">Delete</button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                 <div class="alert-error" style="background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1;">
+                    Belum ada Vendor Bill.
+                </div>
+            <?php endif; ?>
+        </div>
+        
+        <script>
+        function openTab(tabId) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            // Remove active class from buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected content
+            document.getElementById(tabId).classList.add('active');
+            // Activate button (finding it by unique property or event target in real app, but here simple loop is fine or using event context)
+        }
+        
+            // FIX: Add click event listeners dynamically to find correct button
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Content logic handled in onclick attr above for simplicity, or we can move it here
+            });
+        });
+        </script>
     </div>
 
     <!-- Modal Create Invoice -->
@@ -493,10 +637,12 @@
         <div class="modal-content">
             <h2>Buat Invoice Baru</h2>
             <form id="invoiceForm">
+                <input type="hidden" name="source_type" value="manual">
+
                 <div class="form-group">
-                    <label for="partner_id">Customer *</label>
+                    <label for="partner_id">Customer / Vendor *</label>
                     <select id="partner_id" name="partner_id" required>
-                        <option value="">-- Pilih Customer --</option>
+                        <option value="">-- Pilih Customer / Vendor --</option>
                         <?php if (isset($customers) && count($customers) > 0): ?>
                             <?php foreach ($customers as $customer): ?>
                                 <option value="<?php echo $customer['id']; ?>">
@@ -516,17 +662,18 @@
                     <h4>📦 Produk/Jasa</h4>
                     <div id="invoiceLinesContainer">
                         <div class="invoice-line-item">
-                            <select name="product_ids[]" required>
+                            <select name="product_ids[]" required style="flex: 2;">
                                 <option value="">-- Pilih Produk --</option>
                                 <?php if (isset($products) && count($products) > 0): ?>
                                     <?php foreach ($products as $product): ?>
-                                        <option value="<?php echo $product['id']; ?>">
+                                        <option value="<?php echo $product['id']; ?>" data-price="<?php echo $product['list_price'] ?? 0; ?>">
                                             <?php echo htmlspecialchars($product['name']); ?> - Rp <?php echo number_format($product['list_price'] ?? 0, 0, ',', '.'); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
-                            <input type="number" name="quantities[]" value="1" min="1" placeholder="Qty" required>
+                            <input type="number" name="quantities[]" value="1" min="1" placeholder="Qty" required style="flex: 1; min-width: 60px;">
+                            <input type="number" name="prices[]" step="0.01" placeholder="Harga Satuan" required style="flex: 1; min-width: 100px;">
                         </div>
                     </div>
                     <button type="button" class="btn-add-line" onclick="addInvoiceLine()">+ Tambah Item</button>
@@ -566,7 +713,6 @@
                     <label for="payment_journal">Metode Pembayaran *</label>
                     <select id="payment_journal" name="journal_id" required>
                         <option value="">-- Pilih Metode --</option>
-                        <option value="7">Cash</option>
                         <option value="8">Bank</option>
                     </select>
                 </div>
@@ -700,20 +846,69 @@
             if (e.target === this) closeModal();
         });
 
-        // Add new invoice line
-        function addInvoiceLine() {
+        // Initialize product options
+        let productOptionsCache = '';
+
+        function getProductOptions() {
+            if (!productOptionsCache) {
+                const firstSelect = document.querySelector('#invoiceLinesContainer select');
+                if (firstSelect) {
+                    productOptionsCache = firstSelect.innerHTML;
+                }
+            }
+            return productOptionsCache;
+        }
+
+
+
+        // Add new invoice line (modified)
+        function addInvoiceLine(data = null) {
             const container = document.getElementById('invoiceLinesContainer');
-            const firstLine = container.querySelector('.invoice-line-item');
+            const options = getProductOptions();
+            
             const newLine = document.createElement('div');
             newLine.className = 'invoice-line-item';
+            
+            const qty = data ? (data.param_qty || 1) : 1;
+            const price = data ? (data.price_unit || 0) : '';
+            const productId = data ? data.product_id : '';
+            
+            newLine.style.display = 'flex';
+            newLine.style.gap = '10px';
+            newLine.style.marginBottom = '10px';
+
             newLine.innerHTML = `
-                <select name="product_ids[]" required>
-                    ${firstLine.querySelector('select').innerHTML}
+                <select name="product_ids[]" required style="flex: 2;" onchange="updatePrice(this)">
+                    ${options}
                 </select>
-                <input type="number" name="quantities[]" value="1" min="1" placeholder="Qty" required>
-                <button type="button" class="btn-remove" onclick="removeInvoiceLine(this)">✕</button>
+                <input type="number" name="quantities[]" value="${qty}" min="1" placeholder="Qty" required style="flex: 1; min-width: 60px;">
+                <input type="number" name="prices[]" value="${price}" step="0.01" placeholder="Harga Satuan" required style="flex: 1; min-width: 100px;">
+                <button type="button" class="btn-remove" onclick="removeInvoiceLine(this)" style="background:none;border:none;color:red;font-weight:bold;cursor:pointer;">✕</button>
             `;
+            
             container.appendChild(newLine);
+            
+            if (productId) {
+                const select = newLine.querySelector('select');
+                if (select) {
+                    select.value = productId;
+                    // Trigger price update if manual (and price is empty)
+                    if (!data) updatePrice(select);
+                }
+            }
+        }
+
+        // Update price when product changes (manual mode)
+        function updatePrice(select) {
+            const priceInput = select.parentElement.querySelector('input[name="prices[]"]');
+            const option = select.options[select.selectedIndex];
+            // Only update if price is not already set by SO/PO data logic or user content
+            // Actually, for dropdown change, we usually want to reset to list price
+            if (option && option.dataset.price) {
+                if (!priceInput.value || priceInput.value == 0) {
+                     priceInput.value = option.dataset.price;
+                }
+            }
         }
 
         // Remove invoice line
